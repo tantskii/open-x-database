@@ -1,6 +1,8 @@
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
+message("OMX_INCLUDE_DIR: ${OMX_INCLUDE_DIR}")
+
 macro(add_test test_name sources)
     set(binary unittest_${test_name})
 

@@ -44,14 +44,11 @@ set(OMX_VERSION_RELEASE 0)
 set(OMX_COMPILER_NAME ${CMAKE_CXX_COMPILER_ID})
 set(OMX_TARGET_NAME ${CMAKE_SYSTEM_PROCESSOR})
 
-#set(OMX_OUTPUT_PREFIX ${OMX_COMPILER_NAME}/${OMX_TARGET_NAME})
+# set(OMX_OUTPUT_PREFIX ${OMX_COMPILER_NAME}/${OMX_TARGET_NAME})
 set(OMX_OUTPUT_PREFIX "")
 set(OMX_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
-find_package(LevelDB)
-if(NOT LevelDB_FOUND)
-    message(FATAL_ERROR "LevelDB is not found!")
-endif()
+add_subdirectory(extern/leveldb)
 
 find_package(Threads REQUIRED)
 
@@ -65,19 +62,18 @@ add_library(${CMAKE_PROJECT_NAME}
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME}
-    PUBLIC
-        ${LevelDB_INCLUDES}
     PRIVATE
+        ${LEVELDB_PUBLIC_INCLUDE_DIR}
         ${OMX_INCLUDE_DIR}
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
     PRIVATE
-        ${LevelDB_LIBRARIES}
+        leveldb
 )
 
 target_compile_options(${CMAKE_PROJECT_NAME}
-    PRIVATE
+    PUBLIC
         ${OMX_COMPILE_OPTIONS}
 )
 

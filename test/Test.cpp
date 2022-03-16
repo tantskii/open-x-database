@@ -77,7 +77,7 @@ TEST(BinaryStorage, VectorInt) {
 	const size_t numsSize = output.bytesSize();
 
 	ASSERT_EQ(numsSize, nums.size() * sizeof(int));
-	for (int i = 0; i < numsSize; i += sizeof(int)) {
+	for (size_t i = 0; i < numsSize; i += sizeof(int)) {
 		ASSERT_EQ(numsArr[i / sizeof(int)], nums[i / sizeof(int)]);
 	}
 }

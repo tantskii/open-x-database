@@ -1,8 +1,6 @@
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
-message("OMX_INCLUDE_DIR: ${OMX_INCLUDE_DIR}")
-
 macro(add_test test_name sources)
     set(binary unittest_${test_name})
 
@@ -13,7 +11,7 @@ macro(add_test test_name sources)
 
     target_link_libraries(${binary}
         PRIVATE
-            ${CMAKE_PROJECT_NAME}
+            ${CMAKE_PROJECT_NAME}_static
             gtest
             pthread
     )

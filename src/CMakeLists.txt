@@ -40,36 +40,43 @@ find_package(Threads REQUIRED)
 
 set(OMX_COMPILE_OPTIONS -Wall -Wextra -pedantic -Werror -fno-rtti)
 
-add_library(${CMAKE_PROJECT_NAME}
-    SHARED
-        ${OMX_SOURCES}
-        ${OMX_HEADERS}
-        ${OMX_PUBLIC_HEADERS}
-)
+macro(build_omxdb_lib lib_name lib_type)
+    add_library(${lib_name}
+        ${lib_type}
+            ${OMX_SOURCES}
+            ${OMX_HEADERS}
+            ${OMX_PUBLIC_HEADERS}
+    )
 
-target_include_directories(${CMAKE_PROJECT_NAME}
-    PRIVATE
-        ${LEVELDB_PUBLIC_INCLUDE_DIR}
-        ${OMX_INCLUDE_DIR}
-)
+    target_include_directories(${lib_name}
+        PRIVATE
+            ${LEVELDB_PUBLIC_INCLUDE_DIR}
+            ${OMX_INCLUDE_DIR}
+    )
 
-target_link_libraries(${CMAKE_PROJECT_NAME}
-    PRIVATE
-        leveldb
-)
+    target_link_libraries(${lib_name}
+        PRIVATE
+            leveldb
+    )
 
-target_compile_options(${CMAKE_PROJECT_NAME}
-    PUBLIC
-        ${OMX_COMPILE_OPTIONS}
-)
+    target_compile_options(${lib_name}
+        PUBLIC
+            ${OMX_COMPILE_OPTIONS}
+    )
 
-set_target_properties(${CMAKE_PROJECT_NAME}
-    PROPERTIES
+    set_target_properties(${lib_name}
+        PROPERTIES
         DEFINE_SYMBOL "OMXDB_DLL_EXPORTS"
         OUTPUT_NAME   ${CMAKE_PROJECT_NAME}
         VERSION       ${OMX_VERSION_MAJOR}.${OMX_VERSION_MINOR}
         SOVERSION     ${OMX_VERSION_MAJOR}
-)
+    )
+endmacro()
+
+build_omxdb_lib(${CMAKE_PROJECT_NAME} SHARED)
+if (OMX_WITH_UNITTESTS)
+    build_omxdb_lib(${CMAKE_PROJECT_NAME}_static STATIC)
+endif()
 
 install(
     DIRECTORY ${OMX_HEADERS_DIR}

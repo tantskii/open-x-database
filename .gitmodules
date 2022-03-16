@@ -1,0 +1,3 @@
+[submodule "extern/leveldb"]
+	path = extern/leveldb
+	url = git@github.com:google/leveldb.git

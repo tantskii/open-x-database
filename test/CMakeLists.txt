@@ -11,7 +11,7 @@ macro(add_test test_name sources)
 
     target_link_libraries(${binary}
         PRIVATE
-            ${CMAKE_PROJECT_NAME}
+            ${CMAKE_PROJECT_NAME}_static
             gtest
             pthread
     )

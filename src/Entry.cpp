@@ -53,18 +53,14 @@ namespace omx {
 		}
 	}
 
-	Entry::Entry(Key key, Bytes&& value, Operation operation) noexcept
-		: m_key(key)
-		, m_bytes(std::move(value))
-		, m_op(operation)
-	{
-		if (m_op == Operation::Remove) {
-			assert(m_bytes.empty());
-		}
-	}
-
 	Operation Entry::getOperationType() const {
 		return m_op;
 	}
+
+	Entry::Entry(Key key)
+		: m_key(key)
+		, m_bytes()
+		, m_op(Operation::Remove)
+	{}
 
 }

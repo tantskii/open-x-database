@@ -4,6 +4,8 @@
 #include <omx/Key.h>
 
 #include "KeyComparator.h"
+#include "Entry.h"
+#include "MemTableKey.h"
 
 #include <map>
 #include <shared_mutex>
@@ -28,8 +30,9 @@ namespace omx {
 //		void execute(Transaction& transaction);
 
 	private:
-		std::map<Key, Bytes, Comparator> m_map;
+		std::map<InsertKey<Key, Comparator>, Entry, std::less<>> m_map;
 		mutable std::shared_mutex m_mutex;
+		size_t m_counter = 0;
 	};
 }
 

@@ -29,6 +29,7 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/TransactionImpl.h
     ${OMX_SOURCE_DIR}/KeyComparator.h
     ${OMX_SOURCE_DIR}/MemTable.h
+    ${OMX_SOURCE_DIR}/MemTableKey.h
     ${OMX_SOURCE_DIR}/Entry.h
     ${OMX_SOURCE_DIR}/OperationTypes.h
 )
@@ -46,13 +47,13 @@ macro(build_omxdb_lib lib_name lib_type)
     )
 
     target_include_directories(${lib_name}
-        PRIVATE
+        PUBLIC
             ${LEVELDB_PUBLIC_INCLUDE_DIR}
             ${OMX_INCLUDE_DIR}
     )
 
     target_link_libraries(${lib_name}
-        PRIVATE
+        PUBLIC
             leveldb
     )
 

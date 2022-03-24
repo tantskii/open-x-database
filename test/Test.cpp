@@ -1,6 +1,7 @@
 #include <omx/BinaryStorage.h>
 
 #include "../src/Entry.h"
+#include "../src/MemTable.h"
 
 #include <gtest/gtest.h>
 
@@ -46,6 +47,90 @@ TEST(Entry, Get) {
 	ASSERT_EQ(entry.getOperationType(), entryOutput.getOperationType());
 	ASSERT_EQ(entry.getKey().id, entryOutput.getKey().id);
 	ASSERT_EQ(entry.getBytes().toString(), entryOutput.getBytes().toString());
+}
+
+TEST(MemTable, InsertAndGet) {
+	omx::MemTable table;
+
+	omx::Key key1(1);
+	omx::Bytes inp1;
+	omx::Bytes out1;
+	std::string data1 = "1";
+	inp1.from(data1);
+
+	omx::Key key2(2);
+	omx::Bytes inp2;
+	omx::Bytes out2;
+	std::string data2 = "2";
+	inp2.from(data2);
+
+	omx::Key key3(3);
+	omx::Bytes inp3;
+	omx::Bytes out3;
+	std::string data3 = "3";
+	inp3.from(data3);
+
+	table.put(key1, inp1);
+	table.put(key2, inp2);
+	table.put(key3, inp3);
+
+	table.get(key1, out1);
+	table.get(key2, out2);
+	table.get(key3, out3);
+
+	ASSERT_EQ(inp1.toString(), out1.toString());
+	ASSERT_EQ(inp2.toString(), out2.toString());
+	ASSERT_EQ(inp3.toString(), out3.toString());
+}
+
+TEST(MemTable, InsertSameKey) {
+	omx::MemTable table;
+
+	omx::Key key(1234);
+	omx::Bytes inp;
+	omx::Bytes out;
+	std::string data = "a";
+
+	inp.from(data);
+	table.put(key, inp);
+
+	data += "a";
+	inp.from(data);
+	table.put(key, inp);
+
+	data += "a";
+	inp.from(data);
+	table.put(key, inp);
+
+	table.get(key, out);
+
+	ASSERT_EQ(inp.toString(), out.toString());
+}
+
+TEST(MemTable, Remove) {
+	omx::MemTable table;
+
+	omx::Key key(1234);
+	omx::Bytes inp;
+	omx::Bytes out;
+	std::string data = "a";
+
+	inp.from(data);
+	table.put(key, inp);
+
+	data += "a";
+	inp.from(data);
+	table.put(key, inp);
+
+	data += "a";
+	inp.from(data);
+	table.put(key, inp);
+
+	table.remove(key);
+
+	table.get(key, out);
+
+	ASSERT_TRUE(out.empty());
 }
 
 TEST(BinaryStorage, Create) {

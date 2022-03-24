@@ -12,7 +12,7 @@ namespace omx {
 	class Entry {
 	public:
 		Entry(Key key, Bytes value, Operation operation);
-		Entry(Key key, Bytes&& value, Operation operation) noexcept;
+		Entry(Key key);
 
 		void serialize(std::ostream& os) const;
 

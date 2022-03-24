@@ -1,9 +1,12 @@
 #include <omx/BinaryStorage.h>
 
+#include "../src/Entry.h"
+
 #include <gtest/gtest.h>
 
 #include <vector>
 #include <filesystem>
+#include <sstream>
 
 namespace fs = std::filesystem;
 
@@ -22,6 +25,27 @@ constexpr size_t mb(size_t bytes) {
 
 constexpr size_t gb(size_t bytes) {
 	return bytes * 1024 * 1024 * 1024;
+}
+
+TEST(Entry, Get) {
+	omx::Key key(1234);
+	omx::Bytes value;
+	std::string data = "test read write string";
+	value.from(data);
+	omx::Entry entry(key, value, omx::Operation::Read);
+
+	omx::Key key2(1234);
+	omx::Bytes value2;
+	omx::Entry entryOutput(key2, value2, omx::Operation::Remove);
+
+	std::ostringstream os;
+	entry.serialize(os);
+	std::istringstream is(os.str());
+	entryOutput.deserialize(is);
+
+	ASSERT_EQ(entry.getOperationType(), entryOutput.getOperationType());
+	ASSERT_EQ(entry.getKey().id, entryOutput.getKey().id);
+	ASSERT_EQ(entry.getBytes().toString(), entryOutput.getBytes().toString());
 }
 
 TEST(BinaryStorage, Create) {

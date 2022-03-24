@@ -19,6 +19,7 @@ macro(add_test test_name sources)
     target_include_directories(${binary}
         PRIVATE
             ${OMX_INCLUDE_DIR}
+            ${OMX_SOURCE_DIR}
     )
 endmacro()
 

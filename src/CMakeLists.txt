@@ -10,7 +10,6 @@ set(OMX_PUBLIC_HEADERS
     ${OMX_HEADERS_DIR}/internal/Export.h
 )
 
-set(OMX_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/BinaryStorage.cpp
     ${OMX_SOURCE_DIR}/Bytes.cpp
@@ -21,12 +20,17 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/BinaryStorageImpl.cpp
     ${OMX_SOURCE_DIR}/TransactionImpl.cpp
     ${OMX_SOURCE_DIR}/KeyComparator.cpp
+    ${OMX_SOURCE_DIR}/MemTable.cpp
+    ${OMX_SOURCE_DIR}/Entry.cpp
 )
 set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/OptionsImpl.h
     ${OMX_SOURCE_DIR}/BinaryStorageImpl.h
     ${OMX_SOURCE_DIR}/TransactionImpl.h
     ${OMX_SOURCE_DIR}/KeyComparator.h
+    ${OMX_SOURCE_DIR}/MemTable.h
+    ${OMX_SOURCE_DIR}/Entry.h
+    ${OMX_SOURCE_DIR}/OperationTypes.h
 )
 
 find_package(Threads REQUIRED)

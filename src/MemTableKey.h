@@ -17,7 +17,7 @@ namespace omx {
 
 	template <typename TKey>
 	struct SearchKey {
-		SearchKey(TKey key_);
+		explicit SearchKey(TKey key_);
 
 		TKey key;
 	};

@@ -17,9 +17,9 @@ namespace omx {
 		Entry(Key key, Bytes value);
 		explicit Entry(Key key = Key());
 
-		void serialize(std::ostream& os) const;
+		size_t serialize(std::ostream& os) const;
 
-		void deserialize(std::istream& is);
+		size_t deserialize(std::istream& is);
 
 		[[nodiscard]] Key getKey() const;
 

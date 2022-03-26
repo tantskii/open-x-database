@@ -37,10 +37,11 @@ TEST(Entry, Get) {
 	omx::Entry output;
 
 	std::ostringstream os;
-	input.serialize(os);
+	size_t numWriteBytes = input.serialize(os);
 	std::istringstream is(os.str());
-	output.deserialize(is);
+	size_t numReadBytes = output.deserialize(is);
 
+	ASSERT_EQ(numReadBytes, numWriteBytes);
 	ASSERT_EQ(input.getOperationType(), output.getOperationType());
 	ASSERT_EQ(input.getKey().id, output.getKey().id);
 	ASSERT_EQ(input.getBytes().toString(), output.getBytes().toString());

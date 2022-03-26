@@ -8,4 +8,8 @@ namespace omx {
 		: id(id_)
 	{}
 
+	bool Key::operator==(const Key& other) const {
+		return id == other.id;
+	}
+
 } // namespace omx

@@ -22,6 +22,7 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/KeyComparator.cpp
     ${OMX_SOURCE_DIR}/MemTable.cpp
     ${OMX_SOURCE_DIR}/Entry.cpp
+    ${OMX_SOURCE_DIR}/Index.cpp
 )
 set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/OptionsImpl.h
@@ -31,6 +32,7 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/MemTable.h
     ${OMX_SOURCE_DIR}/MemTableKey.h
     ${OMX_SOURCE_DIR}/Entry.h
+    ${OMX_SOURCE_DIR}/Index.h
 )
 
 find_package(Threads REQUIRED)

@@ -9,38 +9,80 @@ namespace omx {
 	void MemTable::put(Key key, const Bytes& value) {
 		std::unique_lock lock(m_mutex);
 
+		if (m_isClosed) {
+			return;
+		}
+
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
 		auto entry = Entry(key, value);
 
-		m_map.insert_or_assign(insertKey, entry);
+		m_map.insert({insertKey, entry});
 	}
 
 	void MemTable::remove(Key key) {
 		std::unique_lock lock(m_mutex);
 
+		if (m_isClosed) {
+			return;
+		}
+
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
 		auto entry = Entry(key);
 
-		m_map.insert_or_assign(insertKey, entry);
+		m_map.insert({insertKey, entry});
 	}
 
-	void MemTable::get(Key key, Bytes& value) {
+	bool MemTable::get(Key key, Bytes& value) {
 		std::shared_lock lock(m_mutex);
+
+		if (m_isClosed) {
+			return false;
+		}
 
 		auto searchKey = SearchKey<Key>(key);
 
 		auto it = m_map.find(searchKey);
 
 		if (it == m_map.end()) {
-			return;
+			return false;
 		}
 
 		const auto& entry = it->second;
 
 		if (entry.getOperationType() == EntryType::Remove) {
-			return;
+			return false;
 		}
 
 		value.toString() = entry.getBytes().toString();
+
+		return true;
+	}
+
+	Index MemTable::dump(size_t fileId, std::ostream& os) {
+		std::unique_lock lock(m_mutex);
+
+		Index index;
+
+		m_isClosed = true;
+
+		size_t offset = 0;
+		size_t size = 0;
+
+		size_t prevKeyId = std::string::npos;
+
+		for (const auto& [insertKey, value]: m_map) {
+			size_t keyId = insertKey.key.id;
+
+			if (prevKeyId == keyId) {
+				continue;
+			}
+			prevKeyId = keyId;
+
+			size = value.serialize(os);
+			index.insert(insertKey.key, SearchHint(fileId, offset, size));
+			offset += size;
+		}
+
+		return index;
 	}
 }

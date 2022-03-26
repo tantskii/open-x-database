@@ -6,10 +6,12 @@
 #include "KeyComparator.h"
 #include "Entry.h"
 #include "MemTableKey.h"
+#include "Index.h"
 
 #include <map>
 #include <shared_mutex>
 #include <mutex>
+#include <ostream>
 
 namespace omx {
 
@@ -24,15 +26,19 @@ namespace omx {
 
 		void remove(Key key);
 
-		void get(Key key, Bytes& value);
+		bool get(Key key, Bytes& value);
 
 //		TODO
 //		void execute(Transaction& transaction);
+
+		Index dump(size_t fileId, std::ostream& os);
 
 	private:
 		std::map<InsertKey<Key, Comparator>, Entry, std::less<>> m_map;
 		mutable std::shared_mutex m_mutex;
 		size_t m_counter = 0;
+
+		bool m_isClosed = false;
 	};
 }
 

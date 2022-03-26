@@ -81,6 +81,61 @@ TEST(MemTable, InsertAndGet) {
 	ASSERT_EQ(inp3.toString(), out3.toString());
 }
 
+TEST(Index, ReadWrite) {
+	omx::Index index;
+	omx::SearchHint hint;
+
+	index.insert(omx::Key(1), omx::SearchHint(1, 100));
+	index.insert(omx::Key(2), omx::SearchHint(1, 200));
+	index.insert(omx::Key(3), omx::SearchHint(1, 300));
+	index.insert(omx::Key(3), omx::SearchHint(2, 400));
+
+	ASSERT_TRUE(index.get(omx::Key(1), hint));
+	ASSERT_EQ(hint.fileId, 1);
+	ASSERT_EQ(hint.offset, 100);
+
+	ASSERT_TRUE(index.get(omx::Key(2), hint));
+	ASSERT_EQ(hint.fileId, 1);
+	ASSERT_EQ(hint.offset, 200);
+
+	ASSERT_TRUE(index.get(omx::Key(3), hint));
+	ASSERT_EQ(hint.fileId, 2);
+	ASSERT_EQ(hint.offset, 400);
+
+	ASSERT_FALSE(index.get(omx::Key(4), hint));
+	ASSERT_EQ(hint.fileId, 0);
+	ASSERT_EQ(hint.offset, 0);
+}
+
+TEST(Index, Merge) {
+	omx::Index index_0;
+	omx::Index index_1;
+	omx::SearchHint hint;
+
+	index_0.insert(omx::Key(1), omx::SearchHint(1, 100));
+	index_0.insert(omx::Key(2), omx::SearchHint(1, 200));
+	index_0.insert(omx::Key(3), omx::SearchHint(1, 300));
+	index_1.insert(omx::Key(3), omx::SearchHint(2, 400));
+	index_1.insert(omx::Key(4), omx::SearchHint(2, 500));
+	index_0.merge(index_1);
+
+	ASSERT_TRUE(index_0.get(omx::Key(1), hint));
+	ASSERT_EQ(hint.fileId, 1);
+	ASSERT_EQ(hint.offset, 100);
+
+	ASSERT_TRUE(index_0.get(omx::Key(2), hint));
+	ASSERT_EQ(hint.fileId, 1);
+	ASSERT_EQ(hint.offset, 200);
+
+	ASSERT_TRUE(index_0.get(omx::Key(3), hint));
+	ASSERT_EQ(hint.fileId, 2);
+	ASSERT_EQ(hint.offset, 400);
+
+	ASSERT_TRUE(index_0.get(omx::Key(4), hint));
+	ASSERT_EQ(hint.fileId, 2);
+	ASSERT_EQ(hint.offset, 500);
+}
+
 TEST(MemTable, InsertSameKey) {
 	omx::MemTable table;
 
@@ -100,7 +155,7 @@ TEST(MemTable, InsertSameKey) {
 	inp.from(data);
 	table.put(key, inp);
 
-	table.get(key, out);
+	ASSERT_TRUE(table.get(key, out));
 
 	ASSERT_EQ(inp.toString(), out.toString());
 }
@@ -126,9 +181,55 @@ TEST(MemTable, Remove) {
 
 	table.remove(key);
 
-	table.get(key, out);
+	ASSERT_FALSE(table.get(key, out));
 
 	ASSERT_TRUE(out.empty());
+}
+
+TEST(MemTable, Dump) {
+	omx::MemTable table;
+	omx::Entry entry;
+	omx::Bytes inp;
+	std::string data;
+	std::string buffer;
+	omx::SearchHint hint;
+
+	data = "111111111111111111111111111111111111111111111111111111";
+	inp.from(data);
+	table.put(omx::Key(1), inp);
+
+	data = "222222222222222222222222222222222222222222222222222222";
+	inp.from(data);
+	table.put(omx::Key(2), inp);
+
+	data = "333333333333333333333333333333333333333333333333333333";
+	inp.from(data);
+	table.put(omx::Key(3), inp);
+
+	table.remove(omx::Key(1));
+
+	std::ostringstream os;
+	omx::Index index = table.dump(0, os);
+
+	data = os.str();
+
+	ASSERT_TRUE(index.get(omx::Key(2), hint));
+	buffer = data.substr(hint.offset, hint.size);
+	std::istringstream is1(buffer);
+	entry.deserialize(is1);
+
+	ASSERT_EQ(entry.getOperationType(), omx::EntryType::Put);
+	ASSERT_EQ(entry.getBytes().toString(), "222222222222222222222222222222222222222222222222222222");
+	ASSERT_EQ(entry.getKey(), omx::Key(2));
+
+	ASSERT_TRUE(index.get(omx::Key(1), hint));
+	buffer = data.substr(hint.offset, hint.size);
+	std::istringstream is2(buffer);
+	entry.deserialize(is2);
+
+	ASSERT_EQ(entry.getOperationType(), omx::EntryType::Remove);
+	ASSERT_TRUE(entry.getBytes().empty());
+	ASSERT_EQ(entry.getKey(), omx::Key(1));
 }
 
 TEST(BinaryStorage, Create) {

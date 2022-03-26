@@ -3,6 +3,8 @@
 #include <omx/Key.h>
 
 #include <unordered_map>
+#include <shared_mutex>
+#include <mutex>
 
 namespace omx {
 
@@ -25,9 +27,10 @@ namespace omx {
 
 		void merge(const Index& other);
 
-		bool get(Key key, SearchHint& hint);
+		bool get(Key key, SearchHint& hint) const;
 
 	private:
+		mutable std::shared_mutex m_mutex;
 		std::unordered_map<Key, SearchHint, Hasher> m_map;
 	};
 

@@ -190,9 +190,10 @@ TEST(MemTable, Dump) {
 	omx::MemTable table;
 	omx::Entry entry;
 	omx::Bytes inp;
+	omx::Index index;
+	omx::SearchHint hint;
 	std::string data;
 	std::string buffer;
-	omx::SearchHint hint;
 
 	data = "111111111111111111111111111111111111111111111111111111";
 	inp.from(data);
@@ -209,7 +210,7 @@ TEST(MemTable, Dump) {
 	table.remove(omx::Key(1));
 
 	std::ostringstream os;
-	omx::Index index = table.dump(0, os);
+	table.dump(0, os, index);
 
 	data = os.str();
 

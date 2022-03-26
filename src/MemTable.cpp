@@ -58,10 +58,8 @@ namespace omx {
 		return true;
 	}
 
-	Index MemTable::dump(size_t fileId, std::ostream& os) {
+	void MemTable::dump(size_t fileId, std::ostream& os, Index& index) {
 		std::unique_lock lock(m_mutex);
-
-		Index index;
 
 		m_isClosed = true;
 
@@ -82,7 +80,5 @@ namespace omx {
 			index.insert(insertKey.key, SearchHint(fileId, offset, size));
 			offset += size;
 		}
-
-		return index;
 	}
 }

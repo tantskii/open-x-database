@@ -31,7 +31,7 @@ namespace omx {
 //		TODO
 //		void execute(Transaction& transaction);
 
-		Index dump(size_t fileId, std::ostream& os);
+		void dump(size_t fileId, std::ostream& os, Index& index);
 
 	private:
 		std::map<InsertKey<Key, Comparator>, Entry, std::less<>> m_map;

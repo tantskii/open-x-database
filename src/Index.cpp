@@ -8,16 +8,19 @@ namespace omx {
 	}
 
 	void Index::insert(Key key, SearchHint hint) {
+		std::unique_lock lock(m_mutex);
 		m_map.insert_or_assign(key, hint);
 	}
 
 	void Index::merge(const Index& other) {
+		std::unique_lock lock(m_mutex);
 		for (const auto& [key, hint]: other.m_map) {
-			insert(key, hint);
+			m_map.insert_or_assign(key, hint);
 		}
 	}
 
-	bool Index::get(Key key, SearchHint& hint) {
+	bool Index::get(Key key, SearchHint& hint) const {
+		std::shared_lock lock(m_mutex);
 		auto it = m_map.find(key);
 
 		if (it == m_map.end()) {

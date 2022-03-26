@@ -7,9 +7,11 @@
 namespace omx {
 
 	struct OMXDB_EXPORT Key {
+		Key() = default;
+
 		explicit Key(uint64_t id_);
 
-		uint64_t id;
+		uint64_t id = 0;
 	};
 
 }

@@ -8,7 +8,7 @@ namespace omx {
 	void Entry::serialize(std::ostream& os) const {
 		const size_t keyLength = sizeof(m_key.id);
 		const size_t numBytes = m_bytes.bytesSize();
-		auto op = static_cast<uint8_t>(m_op);
+		auto op = static_cast<uint8_t>(m_entryType);
 
 		os.write(reinterpret_cast<const char*>(&op), sizeof(op));
 		os.write(reinterpret_cast<const char*>(&keyLength), sizeof(keyLength));
@@ -22,7 +22,7 @@ namespace omx {
 		size_t numBytes = 0;
 		std::string& data = m_bytes.toString();
 
-		is.read(reinterpret_cast<char*>(&m_op), sizeof(m_op));
+		is.read(reinterpret_cast<char*>(&m_entryType), sizeof(m_entryType));
 		is.read(reinterpret_cast<char*>(&keyLength), sizeof(keyLength));
 		is.read(reinterpret_cast<char*>(&m_key.id), keyLength);
 		is.read(reinterpret_cast<char*>(&numBytes), sizeof(size_t));
@@ -43,24 +43,20 @@ namespace omx {
 		return m_bytes;
 	}
 
-	Entry::Entry(Key key, Bytes value, Operation operation)
+	Entry::Entry(Key key, Bytes value)
 		: m_key(key)
 		, m_bytes(std::move(value))
-		, m_op(operation)
-	{
-		if (m_op == Operation::Remove) {
-			assert(m_bytes.empty());
-		}
-	}
+		, m_entryType(EntryType::Put)
+	{}
 
-	Operation Entry::getOperationType() const {
-		return m_op;
+	EntryType Entry::getOperationType() const {
+		return m_entryType;
 	}
 
 	Entry::Entry(Key key)
 		: m_key(key)
 		, m_bytes()
-		, m_op(Operation::Remove)
+		, m_entryType(EntryType::Remove)
 	{}
 
 }

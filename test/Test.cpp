@@ -33,20 +33,17 @@ TEST(Entry, Get) {
 	omx::Bytes value;
 	std::string data = "test read write string";
 	value.from(data);
-	omx::Entry entry(key, value, omx::Operation::Read);
-
-	omx::Key key2(1234);
-	omx::Bytes value2;
-	omx::Entry entryOutput(key2, value2, omx::Operation::Remove);
+	omx::Entry input(key, value);
+	omx::Entry output;
 
 	std::ostringstream os;
-	entry.serialize(os);
+	input.serialize(os);
 	std::istringstream is(os.str());
-	entryOutput.deserialize(is);
+	output.deserialize(is);
 
-	ASSERT_EQ(entry.getOperationType(), entryOutput.getOperationType());
-	ASSERT_EQ(entry.getKey().id, entryOutput.getKey().id);
-	ASSERT_EQ(entry.getBytes().toString(), entryOutput.getBytes().toString());
+	ASSERT_EQ(input.getOperationType(), output.getOperationType());
+	ASSERT_EQ(input.getKey().id, output.getKey().id);
+	ASSERT_EQ(input.getBytes().toString(), output.getBytes().toString());
 }
 
 TEST(MemTable, InsertAndGet) {

@@ -10,7 +10,7 @@ namespace omx {
 		std::unique_lock lock(m_mutex);
 
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
-		auto entry = Entry(key, value, Operation::Put);
+		auto entry = Entry(key, value);
 
 		m_map.insert_or_assign(insertKey, entry);
 	}
@@ -37,7 +37,7 @@ namespace omx {
 
 		const auto& entry = it->second;
 
-		if (entry.getOperationType() == Operation::Remove) {
+		if (entry.getOperationType() == EntryType::Remove) {
 			return;
 		}
 

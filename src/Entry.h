@@ -3,16 +3,19 @@
 #include <omx/Key.h>
 #include <omx/Bytes.h>
 
-#include "OperationTypes.h"
-
 #include <sstream>
 
 namespace omx {
 
+	enum class EntryType : uint8_t {
+		Put = 0,
+		Remove = 1,
+	};
+
 	class Entry {
 	public:
-		Entry(Key key, Bytes value, Operation operation);
-		Entry(Key key);
+		Entry(Key key, Bytes value);
+		explicit Entry(Key key = Key());
 
 		void serialize(std::ostream& os) const;
 
@@ -24,12 +27,12 @@ namespace omx {
 
 		Bytes& getBytes();
 
-		[[nodiscard]] Operation getOperationType() const;
+		[[nodiscard]] EntryType getOperationType() const;
 
 	private:
 		Key m_key;
 		Bytes m_bytes;
-		Operation m_op;
+		EntryType m_entryType;
 	};
 
 }

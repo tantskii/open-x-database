@@ -31,7 +31,6 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/MemTable.h
     ${OMX_SOURCE_DIR}/MemTableKey.h
     ${OMX_SOURCE_DIR}/Entry.h
-    ${OMX_SOURCE_DIR}/OperationTypes.h
 )
 
 find_package(Threads REQUIRED)

@@ -30,9 +30,7 @@ constexpr size_t gb(size_t bytes) {
 
 TEST(Entry, Get) {
 	omx::Key key(1234);
-	omx::Bytes value;
-	std::string data = "test read write string";
-	value.from(data);
+	std::string value = "test read write string";
 	omx::Entry input(key, value);
 	omx::Entry output;
 
@@ -44,29 +42,23 @@ TEST(Entry, Get) {
 	ASSERT_EQ(numReadBytes, numWriteBytes);
 	ASSERT_EQ(input.getOperationType(), output.getOperationType());
 	ASSERT_EQ(input.getKey().id, output.getKey().id);
-	ASSERT_EQ(input.getBytes().toString(), output.getBytes().toString());
+	ASSERT_EQ(input.getData(), output.getData());
 }
 
 TEST(MemTable, InsertAndGet) {
 	omx::MemTable table;
 
 	omx::Key key1(1);
-	omx::Bytes inp1;
-	omx::Bytes out1;
-	std::string data1 = "1";
-	inp1.from(data1);
+	std::string out1;
+	std::string inp1 = "1";
 
 	omx::Key key2(2);
-	omx::Bytes inp2;
-	omx::Bytes out2;
-	std::string data2 = "2";
-	inp2.from(data2);
+	std::string inp2;
+	std::string out2 = "2";
 
 	omx::Key key3(3);
-	omx::Bytes inp3;
-	omx::Bytes out3;
-	std::string data3 = "3";
-	inp3.from(data3);
+	std::string inp3;
+	std::string out3 = "3";
 
 	table.put(key1, inp1);
 	table.put(key2, inp2);
@@ -76,9 +68,9 @@ TEST(MemTable, InsertAndGet) {
 	table.get(key2, out2);
 	table.get(key3, out3);
 
-	ASSERT_EQ(inp1.toString(), out1.toString());
-	ASSERT_EQ(inp2.toString(), out2.toString());
-	ASSERT_EQ(inp3.toString(), out3.toString());
+	ASSERT_EQ(inp1, out1);
+	ASSERT_EQ(inp2, out2);
+	ASSERT_EQ(inp3, out3);
 }
 
 TEST(Index, ReadWrite) {
@@ -140,43 +132,37 @@ TEST(MemTable, InsertSameKey) {
 	omx::MemTable table;
 
 	omx::Key key(1234);
-	omx::Bytes inp;
-	omx::Bytes out;
-	std::string data = "a";
+	std::string out;
+	std::string inp;
 
-	inp.from(data);
+	inp += "a";
 	table.put(key, inp);
 
-	data += "a";
-	inp.from(data);
+	inp += "a";
 	table.put(key, inp);
 
-	data += "a";
-	inp.from(data);
+	inp += "a";
 	table.put(key, inp);
 
 	ASSERT_TRUE(table.get(key, out));
 
-	ASSERT_EQ(inp.toString(), out.toString());
+	ASSERT_EQ(inp, out);
 }
 
 TEST(MemTable, Remove) {
 	omx::MemTable table;
 
 	omx::Key key(1234);
-	omx::Bytes inp;
-	omx::Bytes out;
-	std::string data = "a";
+	std::string out;
+	std::string inp;
 
-	inp.from(data);
+	inp += "a";
 	table.put(key, inp);
 
-	data += "a";
-	inp.from(data);
+	inp += "a";
 	table.put(key, inp);
 
-	data += "a";
-	inp.from(data);
+	inp += "a";
 	table.put(key, inp);
 
 	table.remove(key);
@@ -195,18 +181,9 @@ TEST(MemTable, Dump) {
 	std::string data;
 	std::string buffer;
 
-	data = "111111111111111111111111111111111111111111111111111111";
-	inp.from(data);
-	table.put(omx::Key(1), inp);
-
-	data = "222222222222222222222222222222222222222222222222222222";
-	inp.from(data);
-	table.put(omx::Key(2), inp);
-
-	data = "333333333333333333333333333333333333333333333333333333";
-	inp.from(data);
-	table.put(omx::Key(3), inp);
-
+	table.put(omx::Key(1), "111111111111111111111111111111111111111111111111111111");
+	table.put(omx::Key(2), "222222222222222222222222222222222222222222222222222222");
+	table.put(omx::Key(3), "333333333333333333333333333333333333333333333333333333");
 	table.remove(omx::Key(1));
 
 	std::ostringstream os;
@@ -220,7 +197,7 @@ TEST(MemTable, Dump) {
 	entry.deserialize(is1);
 
 	ASSERT_EQ(entry.getOperationType(), omx::EntryType::Put);
-	ASSERT_EQ(entry.getBytes().toString(), "222222222222222222222222222222222222222222222222222222");
+	ASSERT_EQ(entry.getData(), "222222222222222222222222222222222222222222222222222222");
 	ASSERT_EQ(entry.getKey(), omx::Key(2));
 
 	ASSERT_TRUE(index.get(omx::Key(1), hint));
@@ -229,7 +206,7 @@ TEST(MemTable, Dump) {
 	entry.deserialize(is2);
 
 	ASSERT_EQ(entry.getOperationType(), omx::EntryType::Remove);
-	ASSERT_TRUE(entry.getBytes().empty());
+	ASSERT_TRUE(entry.getData().empty());
 	ASSERT_EQ(entry.getKey(), omx::Key(1));
 }
 

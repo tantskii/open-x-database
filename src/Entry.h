@@ -1,9 +1,9 @@
 #pragma once
 
 #include <omx/Key.h>
-#include <omx/Bytes.h>
 
 #include <sstream>
+#include <string>
 
 namespace omx {
 
@@ -14,7 +14,8 @@ namespace omx {
 
 	class Entry {
 	public:
-		Entry(Key key, Bytes value);
+		Entry(Key key, std::string value);
+
 		explicit Entry(Key key = Key());
 
 		size_t serialize(std::ostream& os) const;
@@ -23,15 +24,15 @@ namespace omx {
 
 		[[nodiscard]] Key getKey() const;
 
-		[[nodiscard]] const Bytes& getBytes() const;
+		[[nodiscard]] const std::string& getData() const;
 
-		Bytes& getBytes();
+		std::string& getData();
 
 		[[nodiscard]] EntryType getOperationType() const;
 
 	private:
 		Key m_key;
-		Bytes m_bytes;
+		std::string m_value;
 		EntryType m_entryType;
 	};
 

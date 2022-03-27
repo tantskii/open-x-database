@@ -6,7 +6,7 @@ namespace omx {
 		return lhs.id < rhs.id;
 	}
 
-	void MemTable::put(Key key, const Bytes& value) {
+	void MemTable::put(Key key, const std::string& value) {
 		std::unique_lock lock(m_mutex);
 
 		if (m_isClosed) {
@@ -16,7 +16,7 @@ namespace omx {
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
 		auto entry = Entry(key, value);
 
-		m_map.insert({insertKey, entry});
+		m_map.insert({insertKey, std::move(entry)});
 	}
 
 	void MemTable::remove(Key key) {
@@ -29,10 +29,10 @@ namespace omx {
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
 		auto entry = Entry(key);
 
-		m_map.insert({insertKey, entry});
+		m_map.insert({insertKey, std::move(entry)});
 	}
 
-	bool MemTable::get(Key key, Bytes& value) {
+	bool MemTable::get(Key key, std::string& value) {
 		std::shared_lock lock(m_mutex);
 
 		if (m_isClosed) {
@@ -53,7 +53,7 @@ namespace omx {
 			return false;
 		}
 
-		value.toString() = entry.getBytes().toString();
+		value = entry.getData();
 
 		return true;
 	}

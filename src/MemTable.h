@@ -22,11 +22,11 @@ namespace omx {
 			bool operator()(const Key& lhs, const Key& rhs) const;
 		};
 
-		void put(Key key, const Bytes& value);
+		void put(Key key, const std::string& value);
 
 		void remove(Key key);
 
-		bool get(Key key, Bytes& value);
+		bool get(Key key, std::string& value);
 
 //		TODO
 //		void execute(Transaction& transaction);

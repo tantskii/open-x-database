@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <shared_mutex>
 #include <mutex>
+#include <iostream>
 
 namespace omx {
 
@@ -28,6 +29,10 @@ namespace omx {
 		void merge(const Index& other);
 
 		bool get(Key key, SearchHint& hint) const;
+
+		void dump(std::ostream& stream);
+
+		void load(std::istream& stream);
 
 	private:
 		mutable std::shared_mutex m_mutex;

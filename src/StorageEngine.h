@@ -15,7 +15,9 @@ namespace omx {
 
 		void remove(Key key);
 
-		bool get(Key key, std::string& value);
+		bool get(Key key, std::string& value) const;
+
+		void load();
 
 	private:
 		std::unique_ptr<MemTable> m_memTable;
@@ -25,6 +27,7 @@ namespace omx {
 		const size_t m_memTableLimit = 1 * 1024 * 1024; // 1 mb
 		const std::filesystem::path m_dir;
 		const std::string m_walFileName;
+		const std::string m_indexFileName;
 	};
 
 }

@@ -47,34 +47,6 @@ TEST(Entry, Get) {
 	ASSERT_EQ(input.getData(), output.getData());
 }
 
-TEST(MemTable, InsertAndGet) {
-	omx::MemTable table;
-
-	omx::Key key1(1);
-	std::string out1;
-	std::string inp1 = "1";
-
-	omx::Key key2(2);
-	std::string inp2;
-	std::string out2 = "2";
-
-	omx::Key key3(3);
-	std::string inp3;
-	std::string out3 = "3";
-
-	table.put(key1, inp1);
-	table.put(key2, inp2);
-	table.put(key3, inp3);
-
-	table.get(key1, out1);
-	table.get(key2, out2);
-	table.get(key3, out3);
-
-	ASSERT_EQ(inp1, out1);
-	ASSERT_EQ(inp2, out2);
-	ASSERT_EQ(inp3, out3);
-}
-
 TEST(Index, ReadWrite) {
 	omx::Index index;
 	omx::SearchHint hint;
@@ -128,6 +100,73 @@ TEST(Index, Merge) {
 	ASSERT_TRUE(index_0.get(omx::Key(4), hint));
 	ASSERT_EQ(hint.fileId, 2);
 	ASSERT_EQ(hint.offset, 500);
+}
+
+TEST(Index, DunpRestore) {
+	CLEAR_DIR(temp_dir);
+
+	omx::Index index_0;
+	omx::Index index_1;
+	omx::SearchHint hint;
+
+	index_0.insert(omx::Key(1), omx::SearchHint(1, 100));
+	index_0.insert(omx::Key(2), omx::SearchHint(1, 200));
+	index_0.insert(omx::Key(3), omx::SearchHint(1, 300));
+	index_0.insert(omx::Key(3), omx::SearchHint(2, 400));
+
+	{
+		std::ofstream file(temp_dir / "index.bin", std::ios::binary | std::ios::app);
+		index_0.dump(file);
+	}
+
+	{
+		std::ifstream file(temp_dir / "index.bin", std::ios::binary | std::ios::in);
+		index_1.load(file);
+	}
+
+	ASSERT_TRUE(index_1.get(omx::Key(1), hint));
+	ASSERT_EQ(hint.fileId, 1);
+	ASSERT_EQ(hint.offset, 100);
+
+	ASSERT_TRUE(index_1.get(omx::Key(2), hint));
+	ASSERT_EQ(hint.fileId, 1);
+	ASSERT_EQ(hint.offset, 200);
+
+	ASSERT_TRUE(index_1.get(omx::Key(3), hint));
+	ASSERT_EQ(hint.fileId, 2);
+	ASSERT_EQ(hint.offset, 400);
+
+	ASSERT_FALSE(index_1.get(omx::Key(4), hint));
+	ASSERT_EQ(hint.fileId, 0);
+	ASSERT_EQ(hint.offset, 0);
+}
+
+TEST(MemTable, InsertAndGet) {
+	omx::MemTable table;
+
+	omx::Key key1(1);
+	std::string out1;
+	std::string inp1 = "1";
+
+	omx::Key key2(2);
+	std::string inp2;
+	std::string out2 = "2";
+
+	omx::Key key3(3);
+	std::string inp3;
+	std::string out3 = "3";
+
+	table.put(key1, inp1);
+	table.put(key2, inp2);
+	table.put(key3, inp3);
+
+	table.get(key1, out1);
+	table.get(key2, out2);
+	table.get(key3, out3);
+
+	ASSERT_EQ(inp1, out1);
+	ASSERT_EQ(inp2, out2);
+	ASSERT_EQ(inp3, out3);
 }
 
 TEST(MemTable, InsertSameKey) {
@@ -243,6 +282,36 @@ TEST(StorageEngine, ReadWrite) {
 			storage.remove(omx::Key(10));
 		}
 	}
+
+	ASSERT_TRUE(storage.get(omx::Key(3), output1));
+	ASSERT_EQ(output1, input);
+	ASSERT_TRUE(storage.get(omx::Key(99999), output2));
+	ASSERT_EQ(output2, input);
+	ASSERT_FALSE(storage.get(omx::Key(100001), output3));
+	ASSERT_FALSE(storage.get(omx::Key(10), output3));
+}
+
+TEST(StorageEngine, Restore) {
+	CLEAR_DIR(temp_dir);
+
+	std::string input = "111111111111111111111111111111111111111111111111111111";
+	std::string output1;
+	std::string output2;
+	std::string output3;
+
+	{
+		omx::StorageEngine storage(temp_dir);
+
+		for (int i = 1; i <= 100000; ++i) {
+			storage.put(omx::Key(i), input);
+
+			if (i == 10000) {
+				storage.remove(omx::Key(10));
+			}
+		}
+	}
+
+	omx::StorageEngine storage(temp_dir);
 
 	ASSERT_TRUE(storage.get(omx::Key(3), output1));
 	ASSERT_EQ(output1, input);

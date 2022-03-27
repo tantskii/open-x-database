@@ -22,6 +22,8 @@ namespace omx {
 		os.write(m_value.data(), numBytes);
 		totalBytes += numBytes;
 
+		os.flush();
+
 		return totalBytes;
 	}
 

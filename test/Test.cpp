@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <filesystem>
+#include <fstream>
 #include <sstream>
 
 namespace fs = std::filesystem;
@@ -198,6 +199,32 @@ TEST(MemTable, Dump) {
 	ASSERT_EQ(entry.getOperationType(), omx::EntryType::Remove);
 	ASSERT_TRUE(entry.getData().empty());
 	ASSERT_EQ(entry.getKey(), omx::Key(1));
+}
+
+TEST(MemTable, Restore) {
+	CLEAR_DIR(temp_dir);
+
+	std::string filename = temp_dir / "log.bin";
+	std::ofstream log(filename, std::ios::binary);
+	std::string value;
+	omx::MemTable table;
+
+	table.setWriteAheadLog(log);
+	table.put(omx::Key(1), "111111111111111111111111111111111111111111111111111111");
+	table.put(omx::Key(2), "222222222222222222222222222222222222222222222222222222");
+	table.put(omx::Key(3), "333333333333333333333333333333333333333333333333333333");
+	table.remove(omx::Key(1));
+
+	std::ifstream input(filename, std::ios::binary);
+
+	omx::MemTable restored;
+	restored.restoreFromLog(input);
+
+	ASSERT_FALSE(restored.get(omx::Key(1), value));
+	ASSERT_TRUE(restored.get(omx::Key(2), value));
+	ASSERT_EQ(value, "222222222222222222222222222222222222222222222222222222");
+	ASSERT_TRUE(restored.get(omx::Key(3), value));
+	ASSERT_EQ(value, "333333333333333333333333333333333333333333333333333333");
 }
 
 TEST(BinaryStorage, Create) {

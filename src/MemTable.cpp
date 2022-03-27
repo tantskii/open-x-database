@@ -6,6 +6,12 @@ namespace omx {
 		return lhs.id < rhs.id;
 	}
 
+	void MemTable::log(const Entry& entry) {
+		if (m_wal) {
+			m_wal->log(entry);
+		}
+	}
+
 	void MemTable::put(Key key, const std::string& value) {
 		std::unique_lock lock(m_mutex);
 
@@ -16,6 +22,7 @@ namespace omx {
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
 		auto entry = Entry(key, value);
 
+		log(entry);
 		m_map.insert({insertKey, std::move(entry)});
 	}
 
@@ -29,6 +36,7 @@ namespace omx {
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
 		auto entry = Entry(key);
 
+		log(entry);
 		m_map.insert({insertKey, std::move(entry)});
 	}
 
@@ -79,6 +87,23 @@ namespace omx {
 			size = value.serialize(os);
 			index.insert(insertKey.key, SearchHint(fileId, offset, size));
 			offset += size;
+		}
+	}
+
+	void MemTable::setWriteAheadLog(std::ostream& stream) {
+		m_wal = std::make_unique<WriteAheadLog>(stream);
+	}
+
+	void MemTable::restoreFromLog(std::istream& stream) {
+		std::unique_lock lock(m_mutex);
+
+		Entry entry;
+		while (!stream.eof()) {
+			entry.deserialize(stream);
+
+			auto key = entry.getKey();
+			auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
+			m_map.insert({insertKey, entry});
 		}
 	}
 }

@@ -135,14 +135,9 @@ TEST(MemTable, InsertSameKey) {
 	std::string out;
 	std::string inp;
 
-	inp += "a";
-	table.put(key, inp);
-
-	inp += "a";
-	table.put(key, inp);
-
-	inp += "a";
-	table.put(key, inp);
+	table.put(key, inp += "a");
+	table.put(key, inp += "a");
+	table.put(key, inp += "a");
 
 	ASSERT_TRUE(table.get(key, out));
 
@@ -156,14 +151,9 @@ TEST(MemTable, Remove) {
 	std::string out;
 	std::string inp;
 
-	inp += "a";
-	table.put(key, inp);
-
-	inp += "a";
-	table.put(key, inp);
-
-	inp += "a";
-	table.put(key, inp);
+	table.put(key, inp += "a");
+	table.put(key, inp += "a");
+	table.put(key, inp += "a");
 
 	table.remove(key);
 

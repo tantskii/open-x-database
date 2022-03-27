@@ -34,7 +34,7 @@ namespace omx {
 
 		void dump(size_t fileId, std::ostream& os, Index& index);
 
-		void setWriteAheadLog(std::ostream& stream);
+		void setWriteAheadLog(const std::string& path);
 
 		void restoreFromLog(std::istream& stream);
 

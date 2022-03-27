@@ -206,11 +206,10 @@ TEST(MemTable, Restore) {
 	CLEAR_DIR(temp_dir);
 
 	std::string filename = temp_dir / "log.bin";
-	std::ofstream log(filename, std::ios::binary);
 	std::string value;
 	omx::MemTable table;
 
-	table.setWriteAheadLog(log);
+	table.setWriteAheadLog(filename);
 	table.put(omx::Key(1), "111111111111111111111111111111111111111111111111111111");
 	table.put(omx::Key(2), "222222222222222222222222222222222222222222222222222222");
 	table.put(omx::Key(3), "333333333333333333333333333333333333333333333333333333");

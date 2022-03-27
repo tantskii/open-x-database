@@ -92,8 +92,8 @@ namespace omx {
 		}
 	}
 
-	void MemTable::setWriteAheadLog(std::ostream& stream) {
-		m_wal = std::make_unique<WriteAheadLog>(stream);
+	void MemTable::setWriteAheadLog(const std::string& path) {
+		m_wal = std::make_unique<WriteAheadLog>(path);
 	}
 
 	void MemTable::restoreFromLog(std::istream& stream) {

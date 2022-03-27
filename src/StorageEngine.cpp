@@ -17,8 +17,8 @@ namespace omx {
 			m_memTable->dump(chunkId, stream, index);
 			m_index.merge(index);
 
-			// TODO set wal
 			m_memTable = std::make_unique<MemTable>();
+			m_memTable->setWriteAheadLog(m_walFileName);
 		}
 	}
 
@@ -52,6 +52,8 @@ namespace omx {
 	}
 
 	StorageEngine::StorageEngine(std::string dir)
-		: m_memTable(new MemTable()), m_dir(std::move(dir))
-	{}
+		: m_memTable(new MemTable()), m_dir(std::move(dir)), m_walFileName(m_dir / "wal.bin")
+	{
+		m_memTable->setWriteAheadLog(m_walFileName);
+	}
 }

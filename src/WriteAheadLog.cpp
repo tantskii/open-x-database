@@ -2,8 +2,8 @@
 
 namespace omx {
 
-	WriteAheadLog::WriteAheadLog(std::ostream& stream)
-		: m_stream(stream)
+	WriteAheadLog::WriteAheadLog(const std::string& path)
+		: m_stream(path, std::ios::out)
 	{}
 
 	void WriteAheadLog::log(const SSTableRow& row) {

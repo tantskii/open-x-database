@@ -4,7 +4,7 @@
 #include <omx/Key.h>
 
 #include "KeyComparator.h"
-#include "Entry.h"
+#include "SSTableRow.h"
 #include "MemTableKey.h"
 #include "Index.h"
 #include "WriteAheadLog.h"
@@ -38,13 +38,16 @@ namespace omx {
 
 		void restoreFromLog(std::istream& stream);
 
+		size_t getApproximateSize() const;
+
 	private:
 
-		void log(const Entry& entry);
+		void log(const SSTableRow& row);
 
-		std::map<InsertKey<Key, Comparator>, Entry, std::less<>> m_map;
+		std::map<InsertKey<Key, Comparator>, SSTableRow, std::less<>> m_map;
 		mutable std::shared_mutex m_mutex;
 		size_t m_counter = 0;
+		size_t m_memorySize = 0;
 
 		bool m_isClosed = false;
 

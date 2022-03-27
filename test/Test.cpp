@@ -1,7 +1,8 @@
 #include <omx/BinaryStorage.h>
 
-#include "../src/Entry.h"
+#include "../src/SSTableRow.h"
 #include "../src/MemTable.h"
+#include "../src/StorageEngine.h"
 
 #include <gtest/gtest.h>
 
@@ -32,8 +33,8 @@ constexpr size_t gb(size_t bytes) {
 TEST(Entry, Get) {
 	omx::Key key(1234);
 	std::string value = "test read write string";
-	omx::Entry input(key, value);
-	omx::Entry output;
+	omx::SSTableRow input(key, value);
+	omx::SSTableRow output;
 
 	std::ostringstream os;
 	size_t numWriteBytes = input.serialize(os);
@@ -165,7 +166,7 @@ TEST(MemTable, Remove) {
 
 TEST(MemTable, Dump) {
 	omx::MemTable table;
-	omx::Entry entry;
+	omx::SSTableRow entry;
 	omx::Bytes inp;
 	omx::Index index;
 	omx::SearchHint hint;
@@ -225,6 +226,31 @@ TEST(MemTable, Restore) {
 	ASSERT_EQ(value, "222222222222222222222222222222222222222222222222222222");
 	ASSERT_TRUE(restored.get(omx::Key(3), value));
 	ASSERT_EQ(value, "333333333333333333333333333333333333333333333333333333");
+}
+
+TEST(StorageEngine, ReadWrite) {
+	CLEAR_DIR(temp_dir);
+
+	omx::StorageEngine storage(temp_dir);
+	std::string input = "111111111111111111111111111111111111111111111111111111";
+	std::string output1;
+	std::string output2;
+	std::string output3;
+
+	for (int i = 1; i <= 100000; ++i) {
+		storage.put(omx::Key(i), input);
+
+		if (i == 10000) {
+			storage.remove(omx::Key(10));
+		}
+	}
+
+	ASSERT_TRUE(storage.get(omx::Key(3), output1));
+	ASSERT_EQ(output1, input);
+	ASSERT_TRUE(storage.get(omx::Key(99999), output2));
+	ASSERT_EQ(output2, input);
+	ASSERT_FALSE(storage.get(omx::Key(100001), output3));
+	ASSERT_FALSE(storage.get(omx::Key(10), output3));
 }
 
 TEST(BinaryStorage, Create) {

@@ -21,9 +21,10 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/TransactionImpl.cpp
     ${OMX_SOURCE_DIR}/KeyComparator.cpp
     ${OMX_SOURCE_DIR}/MemTable.cpp
-    ${OMX_SOURCE_DIR}/Entry.cpp
+    ${OMX_SOURCE_DIR}/SSTableRow.cpp
     ${OMX_SOURCE_DIR}/Index.cpp
     ${OMX_SOURCE_DIR}/WriteAheadLog.cpp
+    ${OMX_SOURCE_DIR}/StorageEngine.cpp
 )
 set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/OptionsImpl.h
@@ -32,9 +33,10 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/KeyComparator.h
     ${OMX_SOURCE_DIR}/MemTable.h
     ${OMX_SOURCE_DIR}/MemTableKey.h
-    ${OMX_SOURCE_DIR}/Entry.h
+    ${OMX_SOURCE_DIR}/SSTableRow.h
     ${OMX_SOURCE_DIR}/Index.h
     ${OMX_SOURCE_DIR}/WriteAheadLog.h
+    ${OMX_SOURCE_DIR}/StorageEngine.h
 )
 
 find_package(Threads REQUIRED)

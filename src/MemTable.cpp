@@ -6,9 +6,9 @@ namespace omx {
 		return lhs.id < rhs.id;
 	}
 
-	void MemTable::log(const Entry& entry) {
+	void MemTable::log(const SSTableRow& row) {
 		if (m_wal) {
-			m_wal->log(entry);
+			m_wal->log(row);
 		}
 	}
 
@@ -20,10 +20,11 @@ namespace omx {
 		}
 
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
-		auto entry = Entry(key, value);
+		auto row = SSTableRow(key, value);
+		m_memorySize += row.getRowSize();
 
-		log(entry);
-		m_map.insert({insertKey, std::move(entry)});
+		log(row);
+		m_map.insert({insertKey, std::move(row)});
 	}
 
 	void MemTable::remove(Key key) {
@@ -34,10 +35,11 @@ namespace omx {
 		}
 
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
-		auto entry = Entry(key);
+		auto row = SSTableRow(key);
+		m_memorySize += row.getRowSize();
 
-		log(entry);
-		m_map.insert({insertKey, std::move(entry)});
+		log(row);
+		m_map.insert({insertKey, std::move(row)});
 	}
 
 	bool MemTable::get(Key key, std::string& value) {
@@ -55,13 +57,13 @@ namespace omx {
 			return false;
 		}
 
-		const auto& entry = it->second;
+		const auto& row = it->second;
 
-		if (entry.getOperationType() == EntryType::Remove) {
+		if (row.getOperationType() == EntryType::Remove) {
 			return false;
 		}
 
-		value = entry.getData();
+		value = row.getData();
 
 		return true;
 	}
@@ -97,13 +99,18 @@ namespace omx {
 	void MemTable::restoreFromLog(std::istream& stream) {
 		std::unique_lock lock(m_mutex);
 
-		Entry entry;
+		SSTableRow row;
 		while (!stream.eof()) {
-			entry.deserialize(stream);
+			row.deserialize(stream);
 
-			auto key = entry.getKey();
+			auto key = row.getKey();
 			auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
-			m_map.insert({insertKey, entry});
+			m_map.insert({insertKey, row});
 		}
+	}
+
+	size_t MemTable::getApproximateSize() const {
+		std::shared_lock lock(m_mutex);
+		return m_memorySize;
 	}
 }

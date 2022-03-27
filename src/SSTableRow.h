@@ -12,11 +12,11 @@ namespace omx {
 		Remove = 1,
 	};
 
-	class Entry {
+	class SSTableRow {
 	public:
-		Entry(Key key, std::string value);
+		SSTableRow(Key key, std::string value);
 
-		explicit Entry(Key key = Key());
+		explicit SSTableRow(Key key = Key());
 
 		size_t serialize(std::ostream& os) const;
 
@@ -29,6 +29,8 @@ namespace omx {
 		std::string& getData();
 
 		[[nodiscard]] EntryType getOperationType() const;
+
+		std::size_t getRowSize() const;
 
 	private:
 		Key m_key;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Entry.h"
+#include "SSTableRow.h"
 
 #include <ostream>
 #include <memory>
@@ -11,7 +11,7 @@ namespace omx {
 	public:
 		explicit WriteAheadLog(std::ostream& stream);
 
-		void log(const Entry& entry);
+		void log(const SSTableRow& row);
 
 	private:
 		std::ostream& m_stream;

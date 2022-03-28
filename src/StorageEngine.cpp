@@ -70,7 +70,7 @@ namespace omx {
 		, m_walFileName(m_dir / "wal.bin")
 		, m_indexFileName(m_dir / "index.bin")
 	{
-		if (fs::is_regular_file(m_indexFileName) && fs::is_regular_file(m_indexFileName)) {
+		if (fs::exists(m_indexFileName) && fs::exists(m_indexFileName)) {
 			load();
 		} else {
 			m_memTable->setWriteAheadLog(m_walFileName);

@@ -11,13 +11,13 @@ namespace omx {
 		m_memTable->put(key, value);
 
 		if (m_memTable->getApproximateSize() >= m_memTableLimit) {
-			size_t chunkId = m_chunkId++;
-			std::string chunkName = "chunk_" + std::to_string(chunkId) + ".bin";
+			size_t segment = m_segmentId++;
+			std::string chunkName = "segment_" + std::to_string(segment) + ".bin";
 			std::ofstream stream(m_dir / chunkName, std::ios::binary);
 			std::ofstream indexStream(m_indexFileName, std::ios::binary | std::ios::app);
 
 			Index index;
-			m_memTable->dump(chunkId, stream, index);
+			m_memTable->dump(segment, stream, index);
 			index.dump(indexStream);
 			m_index.merge(index);
 
@@ -39,7 +39,7 @@ namespace omx {
 			return false;
 		}
 
-		std::string chunkName = "chunk_" + std::to_string(hint.fileId) + ".bin";
+		std::string chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";
 		std::ifstream stream(m_dir / chunkName, std::ios::binary);
 		SSTableRow row;
 

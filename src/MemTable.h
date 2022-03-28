@@ -49,7 +49,7 @@ namespace omx {
 		size_t m_counter = 0;
 		size_t m_memorySize = 0;
 
-		bool m_isClosed = false;
+		bool m_isImmutable = false;
 
 		WriteAheadLogPtr m_wal;
 	};

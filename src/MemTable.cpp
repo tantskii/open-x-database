@@ -15,7 +15,7 @@ namespace omx {
 	void MemTable::put(Key key, const std::string& value) {
 		std::unique_lock lock(m_mutex);
 
-		if (m_isClosed) {
+		if (m_isImmutable) {
 			return;
 		}
 
@@ -30,7 +30,7 @@ namespace omx {
 	void MemTable::remove(Key key) {
 		std::unique_lock lock(m_mutex);
 
-		if (m_isClosed) {
+		if (m_isImmutable) {
 			return;
 		}
 
@@ -45,7 +45,7 @@ namespace omx {
 	bool MemTable::get(Key key, std::string& value) {
 		std::shared_lock lock(m_mutex);
 
-		if (m_isClosed) {
+		if (m_isImmutable) {
 			return false;
 		}
 
@@ -71,7 +71,7 @@ namespace omx {
 	void MemTable::dump(size_t fileId, std::ostream& os, Index& index) {
 		std::unique_lock lock(m_mutex);
 
-		m_isClosed = true;
+		m_isImmutable = true;
 
 		size_t offset = 0;
 		size_t size = 0;

@@ -9,8 +9,18 @@ namespace omx {
 	class SSTable {
 	public:
 
+		void append(SSTableRowPtr row);
+
+		void merge(const SSTable& other);
+
+		void load(std::istream& stream);
+
+		void dump(std::ostream& stream);
+
+		const std::vector<SSTableRowPtr>& getRowList();
+
 	private:
-		std::vector<SSTableRow> m_rows;
+		std::vector<SSTableRowPtr> m_rows;
 	};
 }
 

@@ -1,10 +1,7 @@
 #include "MemTable.h"
+#include "SSTable.h"
 
 namespace omx {
-
-	bool MemTable::Comparator::operator()(const Key& lhs, const Key& rhs) const {
-		return lhs.id < rhs.id;
-	}
 
 	void MemTable::log(SSTableRowPtr row) {
 		if (m_wal) {
@@ -78,6 +75,8 @@ namespace omx {
 
 		size_t prevKeyId = std::string::npos;
 
+		SSTable table;
+
 		for (const auto& [insertKey, row]: m_map) {
 			size_t keyId = insertKey.key.id;
 
@@ -86,10 +85,14 @@ namespace omx {
 			}
 			prevKeyId = keyId;
 
-			size = row->serialize(os);
+			table.append(row);
+
+			size = row->getRowSize();
 			index.insert(insertKey.key, SearchHint(fileId, offset, size));
 			offset += size;
 		}
+
+		table.dump(os);
 	}
 
 	void MemTable::setWriteAheadLog(const std::string& path) {

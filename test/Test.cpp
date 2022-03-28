@@ -1,7 +1,8 @@
 #include <omx/BinaryStorage.h>
 
-#include "../src/SSTableRow.h"
 #include "../src/MemTable.h"
+#include "../src/SSTable.h"
+#include "../src/SSTableRow.h"
 #include "../src/StorageEngine.h"
 
 #include <gtest/gtest.h>
@@ -139,6 +140,28 @@ TEST(Index, DunpRestore) {
 	ASSERT_FALSE(index_1.get(omx::Key(4), hint));
 	ASSERT_EQ(hint.fileId, 0);
 	ASSERT_EQ(hint.offset, 0);
+}
+
+TEST(SSTable, Merge) {
+	omx::SSTable lhs;
+	omx::SSTable rhs;
+
+	lhs.append(std::make_shared<omx::SSTableRow>(omx::Key(0)));         // delete
+	lhs.append(std::make_shared<omx::SSTableRow>(omx::Key(0), "0002")); // update
+	lhs.append(std::make_shared<omx::SSTableRow>(omx::Key(0), "0001")); // update
+
+	rhs.append(std::make_shared<omx::SSTableRow>(omx::Key(0), "0000")); // put
+	rhs.append(std::make_shared<omx::SSTableRow>(omx::Key(1), "0020")); // update
+	rhs.append(std::make_shared<omx::SSTableRow>(omx::Key(1), "0010")); // put
+
+	lhs.merge(rhs);
+	const auto& rows = lhs.getRowList();
+
+	ASSERT_EQ(rows.size(), 2);
+	ASSERT_EQ(rows[0]->getKey(), omx::Key(0));
+	ASSERT_EQ(rows[0]->getOperationType(), omx::EntryType::Remove);
+	ASSERT_EQ(rows[1]->getKey(), omx::Key(1));
+	ASSERT_EQ(rows[1]->getOperationType(), omx::EntryType::Put);
 }
 
 TEST(MemTable, InsertAndGet) {

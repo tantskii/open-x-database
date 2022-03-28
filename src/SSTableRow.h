@@ -19,7 +19,7 @@ namespace omx {
 
 		explicit SSTableRow(Key key = Key());
 
-		size_t serialize(std::ostream& os) const;
+		size_t serialize(std::ostream& os, bool flush = true) const;
 
 		size_t deserialize(std::istream& is);
 

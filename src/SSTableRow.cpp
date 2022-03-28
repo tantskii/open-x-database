@@ -5,7 +5,7 @@
 
 namespace omx {
 
-	size_t SSTableRow::serialize(std::ostream& os) const {
+	size_t SSTableRow::serialize(std::ostream& os, bool flush) const {
 		const size_t keyLength = sizeof(m_key.id);
 		const size_t numBytes = m_value.size();
 		auto op = static_cast<uint8_t>(m_entryType);
@@ -22,7 +22,8 @@ namespace omx {
 		os.write(m_value.data(), numBytes);
 		totalBytes += numBytes;
 
-		os.flush();
+		if (flush)
+			os.flush();
 
 		return totalBytes;
 	}

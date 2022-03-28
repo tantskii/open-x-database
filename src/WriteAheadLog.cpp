@@ -6,8 +6,8 @@ namespace omx {
 		: m_stream(path, std::ios::out)
 	{}
 
-	void WriteAheadLog::log(const SSTableRow& row) {
-		row.serialize(m_stream);
+	void WriteAheadLog::log(SSTableRowPtr row) {
+		row->serialize(m_stream);
 	}
 
 

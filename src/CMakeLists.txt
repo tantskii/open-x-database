@@ -25,6 +25,7 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/Index.cpp
     ${OMX_SOURCE_DIR}/WriteAheadLog.cpp
     ${OMX_SOURCE_DIR}/StorageEngine.cpp
+    ${OMX_SOURCE_DIR}/SSTable.cpp
 )
 set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/OptionsImpl.h
@@ -37,6 +38,7 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/Index.h
     ${OMX_SOURCE_DIR}/WriteAheadLog.h
     ${OMX_SOURCE_DIR}/StorageEngine.h
+    ${OMX_SOURCE_DIR}/SSTable.h
 )
 
 find_package(Threads REQUIRED)

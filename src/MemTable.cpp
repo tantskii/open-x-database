@@ -6,7 +6,7 @@ namespace omx {
 		return lhs.id < rhs.id;
 	}
 
-	void MemTable::log(const SSTableRow& row) {
+	void MemTable::log(SSTableRowPtr row) {
 		if (m_wal) {
 			m_wal->log(row);
 		}
@@ -20,8 +20,8 @@ namespace omx {
 		}
 
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
-		auto row = SSTableRow(key, value);
-		m_memorySize += row.getRowSize();
+		auto row = std::make_shared<SSTableRow>(key, value);
+		m_memorySize += row->getRowSize();
 
 		log(row);
 		m_map.insert({insertKey, std::move(row)});
@@ -35,8 +35,8 @@ namespace omx {
 		}
 
 		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
-		auto row = SSTableRow(key);
-		m_memorySize += row.getRowSize();
+		auto row = std::make_shared<SSTableRow>(key);
+		m_memorySize += row->getRowSize();
 
 		log(row);
 		m_map.insert({insertKey, std::move(row)});
@@ -59,11 +59,11 @@ namespace omx {
 
 		const auto& row = it->second;
 
-		if (row.getOperationType() == EntryType::Remove) {
+		if (row->getOperationType() == EntryType::Remove) {
 			return false;
 		}
 
-		value = row.getData();
+		value = row->getData();
 
 		return true;
 	}
@@ -78,7 +78,7 @@ namespace omx {
 
 		size_t prevKeyId = std::string::npos;
 
-		for (const auto& [insertKey, value]: m_map) {
+		for (const auto& [insertKey, row]: m_map) {
 			size_t keyId = insertKey.key.id;
 
 			if (prevKeyId == keyId) {
@@ -86,7 +86,7 @@ namespace omx {
 			}
 			prevKeyId = keyId;
 
-			size = value.serialize(os);
+			size = row->serialize(os);
 			index.insert(insertKey.key, SearchHint(fileId, offset, size));
 			offset += size;
 		}
@@ -99,13 +99,13 @@ namespace omx {
 	void MemTable::restoreFromLog(std::istream& stream) {
 		std::unique_lock lock(m_mutex);
 
-		SSTableRow row;
 		while (!stream.eof()) {
-			row.deserialize(stream);
+			auto row = std::make_shared<SSTableRow>();
+			row->deserialize(stream);
 
-			auto key = row.getKey();
+			auto key = row->getKey();
 			auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
-			m_map.insert({insertKey, row});
+			m_map.insert({insertKey, std::move(row)});
 		}
 	}
 

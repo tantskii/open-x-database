@@ -42,9 +42,9 @@ namespace omx {
 
 	private:
 
-		void log(const SSTableRow& row);
+		void log(SSTableRowPtr row);
 
-		std::map<InsertKey<Key, Comparator>, SSTableRow, std::less<>> m_map;
+		std::map<InsertKey<Key, Comparator>, SSTableRowPtr, std::less<>> m_map;
 		mutable std::shared_mutex m_mutex;
 		size_t m_counter = 0;
 		size_t m_memorySize = 0;

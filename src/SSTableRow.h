@@ -4,6 +4,7 @@
 
 #include <sstream>
 #include <string>
+#include <memory>
 
 namespace omx {
 
@@ -37,6 +38,8 @@ namespace omx {
 		std::string m_value;
 		EntryType m_entryType;
 	};
+
+	using SSTableRowPtr = std::shared_ptr<SSTableRow>;
 
 }
 

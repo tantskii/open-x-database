@@ -19,10 +19,6 @@ namespace omx {
 	class MemTable {
 	public:
 
-		struct Comparator {
-			bool operator()(const Key& lhs, const Key& rhs) const;
-		};
-
 		void put(Key key, const std::string& value);
 
 		void remove(Key key);
@@ -44,7 +40,7 @@ namespace omx {
 
 		void log(SSTableRowPtr row);
 
-		std::map<InsertKey<Key, Comparator>, SSTableRowPtr, std::less<>> m_map;
+		std::map<InsertKey<Key>, SSTableRowPtr, std::less<>> m_map;
 		mutable std::shared_mutex m_mutex;
 		size_t m_counter = 0;
 		size_t m_memorySize = 0;

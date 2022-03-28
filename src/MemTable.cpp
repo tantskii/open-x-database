@@ -19,7 +19,7 @@ namespace omx {
 			return;
 		}
 
-		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
+		auto insertKey = InsertKey<Key>(m_counter++, key);
 		auto row = std::make_shared<SSTableRow>(key, value);
 		m_memorySize += row->getRowSize();
 
@@ -34,7 +34,7 @@ namespace omx {
 			return;
 		}
 
-		auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
+		auto insertKey = InsertKey<Key>(m_counter++, key);
 		auto row = std::make_shared<SSTableRow>(key);
 		m_memorySize += row->getRowSize();
 
@@ -104,7 +104,7 @@ namespace omx {
 			row->deserialize(stream);
 
 			auto key = row->getKey();
-			auto insertKey = InsertKey<Key, Comparator>(m_counter++, key);
+			auto insertKey = InsertKey<Key>(m_counter++, key);
 			m_map.insert({insertKey, std::move(row)});
 		}
 	}

@@ -3,7 +3,7 @@
 #include <cstdint>
 
 namespace omx {
-	template <typename TKey, typename TKeyComp>
+	template <typename TKey, typename TKeyComp = std::less<Key>>
 	struct InsertKey {
 		InsertKey(uint64_t id_, TKey key_);
 

@@ -12,6 +12,7 @@ namespace omx {
 		explicit Key(uint64_t id_);
 
 		bool operator==(const Key& other) const;
+		bool operator<(const Key& other) const;
 
 		uint64_t id = 0;
 	};

@@ -1,5 +1,7 @@
 #include "SSTable.h"
 
+#include <algorithm>
+
 namespace omx {
 
 	template <typename InputIt, typename OutputIt>
@@ -38,27 +40,18 @@ namespace omx {
 		auto last2   = other.m_rows.cend();
 		auto d_first = std::back_inserter(result);
 
-		for (; first1 != last1; ++d_first) {
-			if (first2 == last2) {
-				copyFirstKeyOccurrence(first1, last1, d_first);
-				return;
-			}
-			if (*first2 == *first1) {
-				*d_first = *first1;
-				first1 = advanceToNextKey(first1, last1);
-				first2 = advanceToNextKey(first2, last2);
-			} else if (*first2 < *first1) {
-				*d_first = *first2;
-				first2 = advanceToNextKey(first2, last2);
-			} else if (*first2 > *first1) {
-				*d_first = *first1;
-				first1 = advanceToNextKey(first1, last1);
-			}
-		}
-		copyFirstKeyOccurrence(first2, last2, d_first);
+		std::merge(first1, last1, first2, last2, d_first);
 
+		auto comp = [](const SSTableRowPtr& lhs, const SSTableRowPtr& rhs) {
+			return lhs->getKey() == rhs->getKey();
+		};
+
+		auto last = std::unique(result.begin(), result.end(), comp);
+
+		result.erase(last, result.end());
 		result.shrink_to_fit();
-		m_rows = result;
+
+		m_rows = std::move(result);
 	}
 
 	void SSTable::load(std::istream& stream) {

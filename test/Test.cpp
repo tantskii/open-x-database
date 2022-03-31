@@ -160,8 +160,10 @@ TEST(SSTable, Merge) {
 	ASSERT_EQ(rows.size(), 2);
 	ASSERT_EQ(rows[0]->getKey(), omx::Key(0));
 	ASSERT_EQ(rows[0]->getOperationType(), omx::EntryType::Remove);
+	ASSERT_EQ(rows[0]->getData(), "");
 	ASSERT_EQ(rows[1]->getKey(), omx::Key(1));
 	ASSERT_EQ(rows[1]->getOperationType(), omx::EntryType::Put);
+	ASSERT_EQ(rows[1]->getData(), "0020");
 }
 
 TEST(MemTable, InsertAndGet) {

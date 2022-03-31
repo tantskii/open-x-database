@@ -1,31 +1,9 @@
 #include "SSTable.h"
 
 #include <algorithm>
+#include <iostream>
 
 namespace omx {
-
-	template <typename InputIt, typename OutputIt>
-	void copyFirstKeyOccurrence(InputIt first, InputIt last, OutputIt dest) {
-		Key prev = Key(std::string::npos);
-		while (first != last) {
-			Key curr = first->get()->getKey();
-			if (curr != prev) {
-				*dest = *first;
-				++dest;
-				prev = curr;
-			}
-			++first;
-		}
-	}
-
-	template <typename InputIt>
-	InputIt advanceToNextKey(InputIt first, InputIt last) {
-		Key prev = first->get()->getKey();
-		while (first < last && first->get()->getKey() == prev) {
-			++first;
-		}
-		return first;
-	}
 
 	void SSTable::append(SSTableRowPtr row) {
 		m_rows.push_back(row);
@@ -55,12 +33,14 @@ namespace omx {
 	}
 
 	void SSTable::load(std::istream& stream) {
-		while (stream.eof()) {
+		while (!stream.eof()) {
 			auto row = std::make_shared<SSTableRow>();
 
 			row->deserialize(stream);
 
 			m_rows.push_back(std::move(row));
+
+			stream.peek();
 		}
 	}
 

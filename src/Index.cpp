@@ -62,6 +62,7 @@ namespace omx {
 			stream.read(reinterpret_cast<char*>(&key.id), sizeOfKey);
 			stream.read(reinterpret_cast<char*>(&sizeOfHint), sizeof(sizeOfHint));
 			stream.read(reinterpret_cast<char*>(&hint), sizeOfHint);
+			stream.peek();
 			m_map.insert({key, hint});
 		}
 	}

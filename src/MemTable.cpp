@@ -109,6 +109,8 @@ namespace omx {
 			auto key = row->getKey();
 			auto insertKey = InsertKey<Key>(m_counter++, key);
 			m_map.insert({insertKey, std::move(row)});
+
+			stream.peek();
 		}
 	}
 

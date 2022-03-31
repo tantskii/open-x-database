@@ -166,6 +166,38 @@ TEST(SSTable, Merge) {
 	ASSERT_EQ(rows[1]->getData(), "0020");
 }
 
+TEST(SSTable, LoadDump) {
+	CLEAR_DIR(temp_dir);
+
+	std::string filename = temp_dir / "sstable.bin";
+
+	omx::SSTable lhs;
+	omx::SSTable rhs;
+
+	lhs.append(std::make_shared<omx::SSTableRow>(omx::Key(1)));
+	lhs.append(std::make_shared<omx::SSTableRow>(omx::Key(2), "0002"));
+	lhs.append(std::make_shared<omx::SSTableRow>(omx::Key(3), "0003"));
+
+	{
+		std::ofstream stream(filename, std::ios::binary | std::ios::out);
+		lhs.dump(stream);
+	}
+
+	{
+		std::ifstream stream(filename, std::ios::binary | std::ios::in);
+		rhs.load(stream);
+	}
+
+	const auto& l = lhs.getRowList();
+	const auto& r = rhs.getRowList();
+	ASSERT_EQ(l.size(), r.size());
+	for (int i = 0; i < 3; ++i) {
+		ASSERT_EQ(l[i]->getKey(), r[i]->getKey());
+		ASSERT_EQ(l[i]->getOperationType(), r[i]->getOperationType());
+		ASSERT_EQ(l[i]->getData(), r[i]->getData());
+	}
+}
+
 TEST(MemTable, InsertAndGet) {
 	omx::MemTable table;
 

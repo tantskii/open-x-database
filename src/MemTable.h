@@ -4,6 +4,7 @@
 #include <omx/Key.h>
 
 #include "KeyComparator.h"
+#include "SSTable.h"
 #include "SSTableRow.h"
 #include "MemTableKey.h"
 #include "Index.h"
@@ -35,6 +36,10 @@ namespace omx {
 		void restoreFromLog(std::istream& stream);
 
 		size_t getApproximateSize() const;
+
+		SSTable createSortedStringsTable() const;
+
+		Index&& createIndex(size_t fileId) const;
 
 	private:
 

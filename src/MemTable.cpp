@@ -118,4 +118,38 @@ namespace omx {
 		std::shared_lock lock(m_mutex);
 		return m_memorySize;
 	}
+
+	SSTable MemTable::createSortedStringsTable() const {
+		std::shared_lock lock(m_mutex);
+
+		SSTable table;
+
+		for (const auto& [_, row]: m_map) {
+			table.append(row);
+		}
+
+		return table;
+	}
+
+	Index&& MemTable::createIndex(const size_t fileId) const {
+		Index index;
+		size_t offset = 0;
+		size_t size = 0;
+		size_t prevKeyId = std::string::npos;
+
+		for (const auto& [insertKey, row]: m_map) {
+			size_t keyId = insertKey.key.id;
+
+			if (prevKeyId == keyId) {
+				continue;
+			}
+			prevKeyId = keyId;
+
+			size = row->getRowSize();
+			index.insert(insertKey.key, SearchHint(fileId, offset, size));
+			offset += size;
+		}
+
+		return std::move(index);
+	}
 }

@@ -34,18 +34,22 @@ constexpr size_t gb(size_t bytes) {
 TEST(Entry, Get) {
 	omx::Key key(1234);
 	std::string value = "test read write string";
-	omx::SSTableRow input(key, value);
-	omx::SSTableRow output;
+	std::string data;
+	auto input = std::make_shared<omx::SSTableRow>(key, value);
+	auto output = std::make_shared<omx::SSTableRow>();
 
 	std::ostringstream os;
-	size_t numWriteBytes = input.serialize(os);
+
+	data = omx::serialize(input);
+	size_t numWriteBytes = data.size();
+	os.write(data.c_str(), numWriteBytes);
 	std::istringstream is(os.str());
-	size_t numReadBytes = output.deserialize(is);
+	size_t numReadBytes = output->deserialize(is);
 
 	ASSERT_EQ(numReadBytes, numWriteBytes);
-	ASSERT_EQ(input.getOperationType(), output.getOperationType());
-	ASSERT_EQ(input.getKey().id, output.getKey().id);
-	ASSERT_EQ(input.getData(), output.getData());
+	ASSERT_EQ(input->getOperationType(), output->getOperationType());
+	ASSERT_EQ(input->getKey().id, output->getKey().id);
+	ASSERT_EQ(input->getData(), output->getData());
 }
 
 TEST(Index, ReadWrite) {
@@ -302,13 +306,15 @@ TEST(MemTable, Restore) {
 
 	std::string filename = temp_dir / "log.bin";
 	std::string value;
-	omx::MemTable table;
 
-	table.setWriteAheadLog(filename);
-	table.put(omx::Key(1), "111111111111111111111111111111111111111111111111111111");
-	table.put(omx::Key(2), "222222222222222222222222222222222222222222222222222222");
-	table.put(omx::Key(3), "333333333333333333333333333333333333333333333333333333");
-	table.remove(omx::Key(1));
+	{
+		omx::MemTable table;
+		table.setWriteAheadLog(filename);
+		table.put(omx::Key(1), "111111111111111111111111111111111111111111111111111111");
+		table.put(omx::Key(2), "222222222222222222222222222222222222222222222222222222");
+		table.put(omx::Key(3), "333333333333333333333333333333333333333333333333333333");
+		table.remove(omx::Key(1));
+	}
 
 	std::ifstream input(filename, std::ios::binary);
 

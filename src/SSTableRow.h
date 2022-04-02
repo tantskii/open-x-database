@@ -15,11 +15,11 @@ namespace omx {
 
 	class SSTableRow {
 	public:
+		SSTableRow(Key key, std::string value, EntryType entryType);
+
 		SSTableRow(Key key, std::string value);
 
 		explicit SSTableRow(Key key = Key());
-
-		size_t serialize(std::ostream& os, bool flush = true) const;
 
 		size_t deserialize(std::istream& is);
 
@@ -41,5 +41,6 @@ namespace omx {
 
 	using SSTableRowPtr = std::shared_ptr<SSTableRow>;
 
+	std::string serialize(SSTableRowPtr row);
 }
 

@@ -11,6 +11,8 @@ namespace omx {
 	public:
 		explicit WriteAheadLog(const std::string& path);
 
+		~WriteAheadLog();
+
 		void log(SSTableRowPtr row);
 
 	private:

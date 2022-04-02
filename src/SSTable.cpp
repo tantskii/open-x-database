@@ -45,8 +45,10 @@ namespace omx {
 	}
 
 	void SSTable::dump(std::ostream& stream) {
+		std::string data;
 		for (auto row: m_rows) {
-			row->serialize(stream, false);
+			data = serialize(row);
+			stream.write(data.c_str(), data.size());
 		}
 		stream.flush();
 	}

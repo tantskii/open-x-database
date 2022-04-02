@@ -1,9 +1,7 @@
 #pragma once
 
-#include <omx/Bytes.h>
 #include <omx/Key.h>
 
-#include "KeyComparator.h"
 #include "SSTable.h"
 #include "SSTableRow.h"
 #include "MemTableKey.h"
@@ -25,9 +23,6 @@ namespace omx {
 		void remove(Key key);
 
 		bool get(Key key, std::string& value);
-
-//		TODO
-//		void execute(Transaction& transaction);
 
 		void dump(size_t fileId, std::ostream& os, Index& index);
 

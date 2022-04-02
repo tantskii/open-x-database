@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <memory>
+#include <utility>
 
 namespace omx {
 
@@ -64,12 +65,12 @@ namespace omx {
 		m_index.load(indexStream);
 	}
 
-	StorageEngine::StorageEngine(std::string dir)
-		: m_memTable(new MemTable())
-		, m_dir(std::move(dir))
-		, m_walFileName(m_dir / "wal.bin")
-		, m_indexFileName(m_dir / "index.bin")
-	{
+	void StorageEngine::open(std::string dir) {
+		m_dir = std::move(dir);
+		m_walFileName = m_dir / "wal.bin";
+		m_indexFileName = m_dir / "index.bin";
+		m_memTable = std::make_unique<MemTable>();
+
 		if (fs::exists(m_walFileName) && fs::exists(m_indexFileName)) {
 			load();
 		} else {
@@ -77,4 +78,7 @@ namespace omx {
 		}
 	}
 
+	StorageEngine::StorageEngine(std::string dir) {
+		open(std::move(dir));
+	}
 }

@@ -1,25 +1,15 @@
 
 set(OMX_HEADERS_DIR ${OMX_INCLUDE_DIR}/omx)
 set(OMX_PUBLIC_HEADERS
-    ${OMX_HEADERS_DIR}/BinaryStorage.h
-    ${OMX_HEADERS_DIR}/Bytes.h
+    ${OMX_HEADERS_DIR}/Database.h
     ${OMX_HEADERS_DIR}/Key.h
-    ${OMX_HEADERS_DIR}/Options.h
-    ${OMX_HEADERS_DIR}/Transaction.h
     ${OMX_HEADERS_DIR}/internal/FastPimpl.h
     ${OMX_HEADERS_DIR}/internal/Export.h
 )
 
 set(OMX_SOURCES
-    ${OMX_SOURCE_DIR}/BinaryStorage.cpp
-    ${OMX_SOURCE_DIR}/Bytes.cpp
+    ${OMX_SOURCE_DIR}/Database.cpp
     ${OMX_SOURCE_DIR}/Key.cpp
-    ${OMX_SOURCE_DIR}/Options.cpp
-    ${OMX_SOURCE_DIR}/Transaction.cpp
-    ${OMX_SOURCE_DIR}/OptionsImpl.cpp
-    ${OMX_SOURCE_DIR}/BinaryStorageImpl.cpp
-    ${OMX_SOURCE_DIR}/TransactionImpl.cpp
-    ${OMX_SOURCE_DIR}/KeyComparator.cpp
     ${OMX_SOURCE_DIR}/MemTable.cpp
     ${OMX_SOURCE_DIR}/SSTableRow.cpp
     ${OMX_SOURCE_DIR}/Index.cpp
@@ -28,10 +18,6 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/SSTable.cpp
 )
 set(OMX_HEADERS
-    ${OMX_SOURCE_DIR}/OptionsImpl.h
-    ${OMX_SOURCE_DIR}/BinaryStorageImpl.h
-    ${OMX_SOURCE_DIR}/TransactionImpl.h
-    ${OMX_SOURCE_DIR}/KeyComparator.h
     ${OMX_SOURCE_DIR}/MemTable.h
     ${OMX_SOURCE_DIR}/MemTableKey.h
     ${OMX_SOURCE_DIR}/SSTableRow.h
@@ -55,18 +41,7 @@ macro(build_omxdb_lib lib_name lib_type)
 
     target_include_directories(${lib_name}
         PUBLIC
-            ${LEVELDB_PUBLIC_INCLUDE_DIR}
             ${OMX_INCLUDE_DIR}
-    )
-
-    target_link_libraries(${lib_name}
-        PUBLIC
-            leveldb
-    )
-
-    target_compile_options(${lib_name}
-        PUBLIC
-            ${OMX_COMPILE_OPTIONS}
     )
 
     set_target_properties(${lib_name}

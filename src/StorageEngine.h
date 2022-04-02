@@ -9,7 +9,11 @@ namespace omx {
 
 	class StorageEngine {
 	public:
+		StorageEngine() = default;
+
 		explicit StorageEngine(std::string dir);
+
+		void open(std::string dir);
 
 		void put(Key key, const std::string& value);
 
@@ -25,9 +29,9 @@ namespace omx {
 
 		std::atomic<size_t> m_segmentId = 0;
 		const size_t m_memTableLimit = 1 * 1024 * 1024; // 1 mb
-		const std::filesystem::path m_dir;
-		const std::string m_walFileName;
-		const std::string m_indexFileName;
+		std::filesystem::path m_dir;
+		std::string m_walFileName;
+		std::string m_indexFileName;
 	};
 
 }

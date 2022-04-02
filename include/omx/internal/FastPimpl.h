@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <utility>
+#include "../../../src/StorageEngine.h"
 
 namespace omx {
 

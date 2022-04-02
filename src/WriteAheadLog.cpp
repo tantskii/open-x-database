@@ -9,11 +9,7 @@ namespace omx {
 	void WriteAheadLog::log(SSTableRowPtr row) {
 		std::string data = serialize(row);
 		m_stream.write(data.c_str(), data.size());
-	}
-
-	WriteAheadLog::~WriteAheadLog() {
 		m_stream.flush();
 	}
-
 
 }

@@ -31,6 +31,8 @@ find_package(Threads REQUIRED)
 
 set(OMX_COMPILE_OPTIONS -Wall -Wextra -pedantic -Werror -fno-rtti)
 
+add_subdirectory(Compression)
+
 macro(build_omxdb_lib lib_name lib_type)
     add_library(${lib_name}
         ${lib_type}

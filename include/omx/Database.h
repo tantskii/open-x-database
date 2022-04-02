@@ -1,31 +1,31 @@
 #pragma once
 
 #include "Key.h"
-#include "Bytes.h"
-#include "Transaction.h"
-#include "Options.h"
 
 #include "internal/FastPimpl.h"
 #include "internal/Export.h"
 
+#include <string>
+
 namespace omx {
 
-	class BinaryStorageImpl;
+	class StorageEngine;
 
 	/**
 	 * @brief A persistent ordered map from keys to values.
 	 */
-	class OMXDB_EXPORT BinaryStorage {
+	class OMXDB_EXPORT Database {
 	public:
-		BinaryStorage();
+		Database();
 
-		~BinaryStorage();
+		~Database();
+
 		/**
 		 * Open the database with the specified "name".
 		 * @param path [in] path to database
 		 * @param options [in] input options @see Options
 		 */
-		void open(const char* path, const Options& options = Options());
+		void open(const char* path);
 
 		/**
 		 * @brief Set the database entry for "key" to "value".
@@ -33,7 +33,7 @@ namespace omx {
 		 * @param value [in] value @see Bytes
 		 * @throws std::runtime_error on error
 		 */
-		void put(Key key, const Bytes& value);
+		void put(Key key, const std::string& value);
 
 		/**
 		 * @brief Remove the database entry (if any) for "key".
@@ -48,19 +48,12 @@ namespace omx {
 		 * @param value [out] value @see Bytes
 		 * @throws std::runtime_error on error
 		 */
-		void get(Key key, Bytes& value);
-
-		/**
-		 * @brief Apply the specified updates to the database.
-		 * @param transaction [in] transaction @see Transaction
-		 * @throws std::runtime_error on error
-		 */
-		void execute(Transaction& transaction);
+		void get(Key key, std::string& value);
 
 	private:
-		static constexpr std::size_t kImplSize = 24;
+		static constexpr std::size_t kImplSize = 240;
 		static constexpr std::size_t kImplAlign = 8;
-		omx::FastPimpl<omx::BinaryStorageImpl, kImplSize, kImplAlign> m_impl;
+		omx::FastPimpl<omx::StorageEngine, kImplSize, kImplAlign> m_impl;
 	};
 
 } // namespace omx

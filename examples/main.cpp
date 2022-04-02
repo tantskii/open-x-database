@@ -1,4 +1,4 @@
-#include <omx/BinaryStorage.h>
+#include <omx/Database.h>
 
 #include <iostream>
 

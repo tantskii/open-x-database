@@ -1,7 +1,7 @@
 # open-x-database
 
-*omxdb* is a key-value storage library based on Google LevelDB 
-that provides an ordered mapping from string keys to string values.
+*omxdb* is a key-value storage library inspired by Google LevelDB 
+that provides an ordered mapping from unsigned int keys to string values.
 
 ## How to build
 
@@ -24,8 +24,6 @@ Build and install *omxdb*
 mkdir build && cd build
 
 cmake .. -DCMAKE_BUILD_TYPE=Release \
-    -DLEVELDB_BUILD_TESTS=OFF  \
-    -DLEVELDB_BUILD_BENCHMARKS=OFF \
     -DCMAKE_C_COMPILER=/usr/bin/clang-13 \
     -DCMAKE_CXX_COMPILER=/usr/bin/clang++-13 \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \

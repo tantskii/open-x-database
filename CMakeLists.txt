@@ -15,8 +15,10 @@ set(OMX_OUTPUT_PREFIX "")
 set(OMX_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 add_subdirectory(src)
+add_subdirectory(extern/snappy)
 
 if (OMX_WITH_UNITTESTS)
+    add_subdirectory(extern/googletest)
     add_subdirectory(test)
 endif()
 

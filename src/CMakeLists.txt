@@ -3,6 +3,7 @@ set(OMX_HEADERS_DIR ${OMX_INCLUDE_DIR}/omx)
 set(OMX_PUBLIC_HEADERS
     ${OMX_HEADERS_DIR}/Database.h
     ${OMX_HEADERS_DIR}/Key.h
+    ${OMX_HEADERS_DIR}/Options.h
     ${OMX_HEADERS_DIR}/internal/FastPimpl.h
     ${OMX_HEADERS_DIR}/internal/Export.h
 )

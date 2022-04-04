@@ -66,7 +66,10 @@ namespace omx {
 	}
 
 	void StorageEngine::load() {
-		m_compressor = createCompressor(CompressionType::Snappy);
+		loadOptions();
+
+		m_compressor = createCompressor(m_opts.compressionType);
+		m_memTableLimit = m_opts.maxMemTableSize;
 
 		std::ifstream memTableStream(m_walFileName, std::ios::binary | std::ios::in);
 		m_memTable->restoreFromLog(memTableStream);
@@ -79,22 +82,41 @@ namespace omx {
 
 	void StorageEngine::open(std::string dir) {
 		m_dir = std::move(dir);
-		m_walFileName = m_dir / "wal.bin";
-		m_indexFileName = m_dir / "index.bin";
+		m_walFileName     = m_dir / "wal.bin";
+		m_indexFileName   = m_dir / "index.bin";
+		m_optionsFileName = m_dir / "options.bin";
+
+		m_compressor = createCompressor(m_opts.compressionType);
+
+		m_memTableLimit = m_opts.maxMemTableSize;
 		m_memTable = std::make_unique<MemTable>();
+		m_memTable->setCompression(m_compressor);
 
 		if (fs::exists(m_walFileName) && fs::exists(m_indexFileName)) {
 			load();
 		} else {
 			m_memTable->setWriteAheadLog(m_walFileName);
 		}
+
+		saveOptions();
 	}
 
-	StorageEngine::StorageEngine(std::string dir) {
+	StorageEngine::StorageEngine(std::string dir, Options options) {
+		m_opts = options;
+
 		open(std::move(dir));
+	}
 
-		m_compressor = createCompressor(CompressionType::Snappy);
+	void StorageEngine::saveOptions() const {
+		std::ofstream stream(m_optionsFileName, std::ios::binary);
+		stream.write(reinterpret_cast<const char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
+		stream.write(reinterpret_cast<const char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
+		stream.flush();
+	}
 
-		m_memTable->setCompression(m_compressor);
+	void StorageEngine::loadOptions() {
+		std::ifstream stream(m_optionsFileName, std::ios::binary);
+		stream.read(reinterpret_cast<char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
+		stream.read(reinterpret_cast<char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
 	}
 }

@@ -1,3 +1,5 @@
+#include <omx/Options.h>
+
 #include "NoCompression.h"
 #include "SnappyCompressionAdapter.h"
 

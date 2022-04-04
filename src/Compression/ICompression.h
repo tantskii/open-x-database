@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CompressionType.h"
+#include <omx/Options.h>
 
 #include <string>
 #include <memory>

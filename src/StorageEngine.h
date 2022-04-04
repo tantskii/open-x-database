@@ -25,6 +25,7 @@ namespace omx {
 
 	private:
 		std::unique_ptr<MemTable> m_memTable;
+		ICompressionPtr m_compressor;
 		Index m_index;
 
 		std::atomic<size_t> m_segmentId = 0;

@@ -1,4 +1,5 @@
 #include "StorageEngine.h"
+#include "Compression/ICompression.h"
 
 #include <fstream>
 #include <memory>
@@ -24,6 +25,7 @@ namespace omx {
 
 			m_memTable = std::make_unique<MemTable>();
 			m_memTable->setWriteAheadLog(m_walFileName);
+			m_memTable->setCompression(m_compressor);
 		}
 	}
 
@@ -43,8 +45,16 @@ namespace omx {
 		std::string chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";
 		std::ifstream stream(m_dir / chunkName, std::ios::binary);
 
+		std::string compressed;
+		compressed.resize(hint.size);
+
 		stream.seekg(hint.offset);
-		SSTableRowPtr row = deserialize(stream);
+		stream.read(compressed.data(), compressed.size());
+
+		std::string uncompressed;
+		m_compressor->uncompress(compressed, uncompressed);
+
+		SSTableRowPtr row = deserialize(uncompressed);
 
 		if (row->getOperationType() == EntryType::Remove) {
 			return false;
@@ -56,9 +66,12 @@ namespace omx {
 	}
 
 	void StorageEngine::load() {
+		m_compressor = createCompressor(CompressionType::Snappy);
+
 		std::ifstream memTableStream(m_walFileName, std::ios::binary | std::ios::in);
 		m_memTable->restoreFromLog(memTableStream);
 		m_memTable->setWriteAheadLog(m_walFileName);
+		m_memTable->setCompression(m_compressor);
 
 		std::ifstream indexStream(m_indexFileName, std::ios::binary | std::ios::in);
 		m_index.load(indexStream);
@@ -79,5 +92,9 @@ namespace omx {
 
 	StorageEngine::StorageEngine(std::string dir) {
 		open(std::move(dir));
+
+		m_compressor = createCompressor(CompressionType::Snappy);
+
+		m_memTable->setCompression(m_compressor);
 	}
 }

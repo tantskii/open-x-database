@@ -46,6 +46,11 @@ macro(build_omxdb_lib lib_name lib_type)
             ${OMX_INCLUDE_DIR}
     )
 
+    target_link_libraries(${lib_name}
+        PUBLIC
+            omxdb_compression
+    )
+
     set_target_properties(${lib_name}
         PROPERTIES
         DEFINE_SYMBOL "OMXDB_DLL_EXPORTS"

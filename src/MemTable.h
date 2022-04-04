@@ -7,6 +7,7 @@
 #include "MemTableKey.h"
 #include "Index.h"
 #include "WriteAheadLog.h"
+#include "Compression/ICompression.h"
 
 #include <map>
 #include <shared_mutex>
@@ -18,6 +19,8 @@ namespace omx {
 	class MemTable {
 	public:
 
+		MemTable();
+
 		void put(Key key, const std::string& value);
 
 		void remove(Key key);
@@ -27,6 +30,8 @@ namespace omx {
 		void dump(size_t fileId, std::ostream& os, Index& index);
 
 		void setWriteAheadLog(const std::string& path);
+
+		void setCompression(ICompressionPtr compressor);
 
 		void restoreFromLog(std::istream& stream);
 
@@ -48,6 +53,7 @@ namespace omx {
 		bool m_isImmutable = false;
 
 		WriteAheadLogPtr m_wal;
+		ICompressionPtr m_compressor;
 	};
 }
 

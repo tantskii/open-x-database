@@ -1,5 +1,6 @@
 #include "MemTable.h"
 #include "SSTable.h"
+#include "Compression/ICompression.h"
 
 namespace omx {
 
@@ -75,8 +76,6 @@ namespace omx {
 
 		size_t prevKeyId = std::string::npos;
 
-		SSTable table;
-
 		for (const auto& [insertKey, row]: m_map) {
 			size_t keyId = insertKey.key.id;
 
@@ -85,17 +84,24 @@ namespace omx {
 			}
 			prevKeyId = keyId;
 
-			table.append(row);
+			std::string uncompressed = serialize(row);
+			std::string compressed;
+			m_compressor->compress(uncompressed, compressed);
 
-			size = row->getRowSize();
+			os.write(compressed.data(), compressed.size());
+
+			size = compressed.size();
+
 			index.insert(insertKey.key, SearchHint(fileId, offset, size));
+
 			offset += size;
 		}
 
-		table.dump(os);
+		os.flush();
 	}
 
 	void MemTable::setWriteAheadLog(const std::string& path) {
+		std::unique_lock lock(m_mutex);
 		m_wal = std::make_unique<WriteAheadLog>(path);
 	}
 
@@ -131,6 +137,8 @@ namespace omx {
 	}
 
 	Index&& MemTable::createIndex(const size_t fileId) const {
+		std::shared_lock lock(m_mutex);
+
 		Index index;
 		size_t offset = 0;
 		size_t size = 0;
@@ -150,5 +158,14 @@ namespace omx {
 		}
 
 		return std::move(index);
+	}
+
+	void MemTable::setCompression(ICompressionPtr compressor) {
+		std::unique_lock lock(m_mutex);
+		m_compressor = std::move(compressor);
+	}
+
+	MemTable::MemTable() {
+		m_compressor = createCompressor(CompressionType::NoCompression);
 	}
 }

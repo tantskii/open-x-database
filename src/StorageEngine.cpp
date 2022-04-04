@@ -42,16 +42,15 @@ namespace omx {
 
 		std::string chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";
 		std::ifstream stream(m_dir / chunkName, std::ios::binary);
-		SSTableRow row;
 
 		stream.seekg(hint.offset);
-		row.deserialize(stream);
+		SSTableRowPtr row = deserialize(stream);
 
-		if (row.getOperationType() == EntryType::Remove) {
+		if (row->getOperationType() == EntryType::Remove) {
 			return false;
 		}
 
-		value = row.getData();
+		value = row->getData();
 
 		return true;
 	}

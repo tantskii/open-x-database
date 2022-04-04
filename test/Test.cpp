@@ -34,19 +34,11 @@ constexpr size_t gb(size_t bytes) {
 TEST(Entry, Get) {
 	omx::Key key(1234);
 	std::string value = "test read write string";
-	std::string data;
+
 	auto input = std::make_shared<omx::SSTableRow>(key, value);
-	auto output = std::make_shared<omx::SSTableRow>();
+	std::string data = omx::serialize(input);
+	auto output = omx::deserialize(data);
 
-	std::ostringstream os;
-
-	data = omx::serialize(input);
-	size_t numWriteBytes = data.size();
-	os.write(data.c_str(), numWriteBytes);
-	std::istringstream is(os.str());
-	size_t numReadBytes = output->deserialize(is);
-
-	ASSERT_EQ(numReadBytes, numWriteBytes);
 	ASSERT_EQ(input->getOperationType(), output->getOperationType());
 	ASSERT_EQ(input->getKey().id, output->getKey().id);
 	ASSERT_EQ(input->getData(), output->getData());
@@ -266,7 +258,7 @@ TEST(MemTable, Remove) {
 
 TEST(MemTable, Dump) {
 	omx::MemTable table;
-	omx::SSTableRow entry;
+	omx::SSTableRowPtr entry;
 	omx::Index index;
 	omx::SearchHint hint;
 	std::string data;
@@ -284,21 +276,19 @@ TEST(MemTable, Dump) {
 
 	ASSERT_TRUE(index.get(omx::Key(2), hint));
 	buffer = data.substr(hint.offset, hint.size);
-	std::istringstream is1(buffer);
-	entry.deserialize(is1);
+	entry = omx::deserialize(buffer);
 
-	ASSERT_EQ(entry.getOperationType(), omx::EntryType::Put);
-	ASSERT_EQ(entry.getData(), "222222222222222222222222222222222222222222222222222222");
-	ASSERT_EQ(entry.getKey(), omx::Key(2));
+	ASSERT_EQ(entry->getOperationType(), omx::EntryType::Put);
+	ASSERT_EQ(entry->getData(), "222222222222222222222222222222222222222222222222222222");
+	ASSERT_EQ(entry->getKey(), omx::Key(2));
 
 	ASSERT_TRUE(index.get(omx::Key(1), hint));
 	buffer = data.substr(hint.offset, hint.size);
-	std::istringstream is2(buffer);
-	entry.deserialize(is2);
+	entry = omx::deserialize(buffer);
 
-	ASSERT_EQ(entry.getOperationType(), omx::EntryType::Remove);
-	ASSERT_TRUE(entry.getData().empty());
-	ASSERT_EQ(entry.getKey(), omx::Key(1));
+	ASSERT_EQ(entry->getOperationType(), omx::EntryType::Remove);
+	ASSERT_TRUE(entry->getData().empty());
+	ASSERT_EQ(entry->getKey(), omx::Key(1));
 }
 
 TEST(MemTable, Restore) {

@@ -6,27 +6,6 @@
 
 namespace omx {
 
-	size_t SSTableRow::deserialize(std::istream& is) {
-		size_t keyLength = 0;
-		size_t numBytes = 0;
-		size_t totalBytes = 0;
-
-		is.read(reinterpret_cast<char*>(&m_entryType), sizeof(m_entryType));
-		totalBytes += sizeof(m_entryType);
-		is.read(reinterpret_cast<char*>(&keyLength), sizeof(keyLength));
-		totalBytes += sizeof(keyLength);
-		is.read(reinterpret_cast<char*>(&m_key.id), keyLength);
-		totalBytes += keyLength;
-		is.read(reinterpret_cast<char*>(&numBytes), sizeof(size_t));
-		totalBytes += sizeof(size_t);
-
-		m_value.resize(numBytes);
-		is.read(m_value.data(), numBytes);
-		totalBytes += numBytes;
-
-		return totalBytes;
-	}
-
 	Key SSTableRow::getKey() const {
 		return m_key;
 	}
@@ -84,6 +63,29 @@ namespace omx {
 		stream.write(value.data(), numBytes);
 
 		return stream.str();
+	}
+
+	SSTableRowPtr deserialize(const std::string& data) {
+		std::istringstream stream(data);
+		return deserialize(stream);
+	}
+
+	SSTableRowPtr deserialize(std::istream& stream) {
+		size_t keyLength = 0;
+		size_t numBytes = 0;
+		EntryType entryType;
+		Key key;
+		std::string value;
+
+		stream.read(reinterpret_cast<char*>(&entryType), sizeof(entryType));
+		stream.read(reinterpret_cast<char*>(&keyLength), sizeof(keyLength));
+		stream.read(reinterpret_cast<char*>(&key.id), keyLength);
+		stream.read(reinterpret_cast<char*>(&numBytes), sizeof(size_t));
+
+		value.resize(numBytes);
+		stream.read(value.data(), numBytes);
+
+		return std::make_shared<SSTableRow>(key, value, entryType);
 	}
 
 }

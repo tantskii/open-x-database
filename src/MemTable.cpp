@@ -103,8 +103,7 @@ namespace omx {
 		std::unique_lock lock(m_mutex);
 
 		while (!stream.eof()) {
-			auto row = std::make_shared<SSTableRow>();
-			row->deserialize(stream);
+			auto row = deserialize(stream);
 
 			auto key = row->getKey();
 			auto insertKey = InsertKey<Key>(m_counter++, key);

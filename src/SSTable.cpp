@@ -34,9 +34,7 @@ namespace omx {
 
 	void SSTable::load(std::istream& stream) {
 		while (!stream.eof()) {
-			auto row = std::make_shared<SSTableRow>();
-
-			row->deserialize(stream);
+			auto row = deserialize(stream);
 
 			m_rows.push_back(std::move(row));
 

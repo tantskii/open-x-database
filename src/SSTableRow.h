@@ -21,8 +21,6 @@ namespace omx {
 
 		explicit SSTableRow(Key key = Key());
 
-		size_t deserialize(std::istream& is);
-
 		[[nodiscard]] Key getKey() const;
 
 		[[nodiscard]] const std::string& getData() const;
@@ -42,5 +40,9 @@ namespace omx {
 	using SSTableRowPtr = std::shared_ptr<SSTableRow>;
 
 	std::string serialize(SSTableRowPtr row);
+
+	SSTableRowPtr deserialize(const std::string& data);
+
+	SSTableRowPtr deserialize(std::istream& is);
 }
 

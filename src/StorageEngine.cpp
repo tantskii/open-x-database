@@ -1,4 +1,5 @@
 #include "StorageEngine.h"
+#include "Compression/ICompression.h"
 
 #include <fstream>
 #include <memory>
@@ -24,6 +25,7 @@ namespace omx {
 
 			m_memTable = std::make_unique<MemTable>();
 			m_memTable->setWriteAheadLog(m_walFileName);
+			m_memTable->setCompression(m_compressor);
 		}
 	}
 
@@ -42,24 +44,37 @@ namespace omx {
 
 		std::string chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";
 		std::ifstream stream(m_dir / chunkName, std::ios::binary);
-		SSTableRow row;
+
+		std::string compressed;
+		compressed.resize(hint.size);
 
 		stream.seekg(hint.offset);
-		row.deserialize(stream);
+		stream.read(compressed.data(), compressed.size());
 
-		if (row.getOperationType() == EntryType::Remove) {
+		std::string uncompressed;
+		m_compressor->uncompress(compressed, uncompressed);
+
+		SSTableRowPtr row = deserialize(uncompressed);
+
+		if (row->getOperationType() == EntryType::Remove) {
 			return false;
 		}
 
-		value = row.getData();
+		value = row->getData();
 
 		return true;
 	}
 
 	void StorageEngine::load() {
+		loadOptions();
+
+		m_compressor = createCompressor(m_opts.compressionType);
+		m_memTableLimit = m_opts.maxMemTableSize;
+
 		std::ifstream memTableStream(m_walFileName, std::ios::binary | std::ios::in);
 		m_memTable->restoreFromLog(memTableStream);
 		m_memTable->setWriteAheadLog(m_walFileName);
+		m_memTable->setCompression(m_compressor);
 
 		std::ifstream indexStream(m_indexFileName, std::ios::binary | std::ios::in);
 		m_index.load(indexStream);
@@ -67,18 +82,41 @@ namespace omx {
 
 	void StorageEngine::open(std::string dir) {
 		m_dir = std::move(dir);
-		m_walFileName = m_dir / "wal.bin";
-		m_indexFileName = m_dir / "index.bin";
+		m_walFileName     = m_dir / "wal.bin";
+		m_indexFileName   = m_dir / "index.bin";
+		m_optionsFileName = m_dir / "options.bin";
+
+		m_compressor = createCompressor(m_opts.compressionType);
+
+		m_memTableLimit = m_opts.maxMemTableSize;
 		m_memTable = std::make_unique<MemTable>();
+		m_memTable->setCompression(m_compressor);
 
 		if (fs::exists(m_walFileName) && fs::exists(m_indexFileName)) {
 			load();
 		} else {
 			m_memTable->setWriteAheadLog(m_walFileName);
 		}
+
+		saveOptions();
 	}
 
-	StorageEngine::StorageEngine(std::string dir) {
+	StorageEngine::StorageEngine(std::string dir, Options options) {
+		m_opts = options;
+
 		open(std::move(dir));
+	}
+
+	void StorageEngine::saveOptions() const {
+		std::ofstream stream(m_optionsFileName, std::ios::binary);
+		stream.write(reinterpret_cast<const char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
+		stream.write(reinterpret_cast<const char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
+		stream.flush();
+	}
+
+	void StorageEngine::loadOptions() {
+		std::ifstream stream(m_optionsFileName, std::ios::binary);
+		stream.read(reinterpret_cast<char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
+		stream.read(reinterpret_cast<char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
 	}
 }

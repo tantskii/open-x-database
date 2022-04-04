@@ -3,6 +3,7 @@ set(OMX_HEADERS_DIR ${OMX_INCLUDE_DIR}/omx)
 set(OMX_PUBLIC_HEADERS
     ${OMX_HEADERS_DIR}/Database.h
     ${OMX_HEADERS_DIR}/Key.h
+    ${OMX_HEADERS_DIR}/Options.h
     ${OMX_HEADERS_DIR}/internal/FastPimpl.h
     ${OMX_HEADERS_DIR}/internal/Export.h
 )
@@ -31,6 +32,8 @@ find_package(Threads REQUIRED)
 
 set(OMX_COMPILE_OPTIONS -Wall -Wextra -pedantic -Werror -fno-rtti)
 
+add_subdirectory(Compression)
+
 macro(build_omxdb_lib lib_name lib_type)
     add_library(${lib_name}
         ${lib_type}
@@ -42,6 +45,11 @@ macro(build_omxdb_lib lib_name lib_type)
     target_include_directories(${lib_name}
         PUBLIC
             ${OMX_INCLUDE_DIR}
+    )
+
+    target_link_libraries(${lib_name}
+        PUBLIC
+            omxdb_compression
     )
 
     set_target_properties(${lib_name}

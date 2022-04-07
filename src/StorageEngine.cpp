@@ -118,5 +118,6 @@ namespace omx {
 		std::ifstream stream(m_optionsFileName, std::ios::binary);
 		stream.read(reinterpret_cast<char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
 		stream.read(reinterpret_cast<char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
+		stream.peek();
 	}
 }

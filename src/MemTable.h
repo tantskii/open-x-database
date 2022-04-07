@@ -8,6 +8,7 @@
 #include "Index.h"
 #include "WriteAheadLog.h"
 #include "Compression/ICompression.h"
+#include "Hasher/IHasher.h"
 
 #include <map>
 #include <shared_mutex>
@@ -33,6 +34,8 @@ namespace omx {
 
 		void setCompression(ICompressionPtr compressor);
 
+		void setHasher(IHasherPtr hasher);
+
 		void restoreFromLog(std::istream& stream);
 
 		size_t getApproximateSize() const;
@@ -54,6 +57,7 @@ namespace omx {
 
 		WriteAheadLogPtr m_wal;
 		ICompressionPtr m_compressor;
+		IHasherPtr m_hasher;
 	};
 }
 

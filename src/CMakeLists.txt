@@ -33,6 +33,7 @@ find_package(Threads REQUIRED)
 set(OMX_COMPILE_OPTIONS -Wall -Wextra -pedantic -Werror -fno-rtti)
 
 add_subdirectory(Compression)
+add_subdirectory(Hasher)
 
 macro(build_omxdb_lib lib_name lib_type)
     add_library(${lib_name}
@@ -50,6 +51,7 @@ macro(build_omxdb_lib lib_name lib_type)
     target_link_libraries(${lib_name}
         PUBLIC
             omxdb_compression
+            omxdb_hashing
     )
 
     set_target_properties(${lib_name}

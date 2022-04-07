@@ -45,11 +45,19 @@ namespace omx {
 		std::string chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";
 		std::ifstream stream(m_dir / chunkName, std::ios::binary);
 
+		UInt128 checksum;
+
 		std::string compressed;
-		compressed.resize(hint.size);
+		compressed.resize(hint.size - sizeof(checksum));
 
 		stream.seekg(hint.offset);
 		stream.read(compressed.data(), compressed.size());
+		stream.read(reinterpret_cast<char*>(&checksum.first), sizeof(checksum));
+		stream.peek();
+
+		if (checksum != m_hasher->hash(compressed)) {
+			return false;
+		}
 
 		std::string uncompressed;
 		m_compressor->uncompress(compressed, uncompressed);
@@ -69,12 +77,14 @@ namespace omx {
 		loadOptions();
 
 		m_compressor = createCompressor(m_opts.compressionType);
+		m_hasher = createHasher(m_opts.hashType);
 		m_memTableLimit = m_opts.maxMemTableSize;
 
 		std::ifstream memTableStream(m_walFileName, std::ios::binary | std::ios::in);
 		m_memTable->restoreFromLog(memTableStream);
 		m_memTable->setWriteAheadLog(m_walFileName);
 		m_memTable->setCompression(m_compressor);
+		m_memTable->setHasher(m_hasher);
 
 		std::ifstream indexStream(m_indexFileName, std::ios::binary | std::ios::in);
 		m_index.load(indexStream);
@@ -87,10 +97,12 @@ namespace omx {
 		m_optionsFileName = m_dir / "options.bin";
 
 		m_compressor = createCompressor(m_opts.compressionType);
+		m_hasher = createHasher(m_opts.hashType);
 
 		m_memTableLimit = m_opts.maxMemTableSize;
 		m_memTable = std::make_unique<MemTable>();
 		m_memTable->setCompression(m_compressor);
+		m_memTable->setHasher(m_hasher);
 
 		if (fs::exists(m_walFileName) && fs::exists(m_indexFileName)) {
 			load();

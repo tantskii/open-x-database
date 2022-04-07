@@ -90,7 +90,11 @@ namespace omx {
 
 			os.write(compressed.data(), compressed.size());
 
-			size = compressed.size();
+			UInt128 checksum = m_hasher->hash(compressed);
+
+			os.write(reinterpret_cast<const char*>(&checksum.first), sizeof(checksum));
+
+			size = compressed.size() + sizeof(checksum);
 
 			index.insert(insertKey.key, SearchHint(fileId, offset, size));
 
@@ -167,5 +171,11 @@ namespace omx {
 
 	MemTable::MemTable() {
 		m_compressor = createCompressor(CompressionType::NoCompression);
+		m_hasher = createHasher(HashType::NoHash);
+	}
+
+	void MemTable::setHasher(IHasherPtr hasher) {
+		std::unique_lock lock(m_mutex);
+		m_hasher = std::move(hasher);
 	}
 }

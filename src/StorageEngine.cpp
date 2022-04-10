@@ -26,6 +26,7 @@ namespace omx {
 			m_memTable = std::make_unique<MemTable>();
 			m_memTable->setWriteAheadLog(m_walFileName);
 			m_memTable->setCompression(m_compressor);
+			m_memTable->setHasher(m_hasher);
 		}
 	}
 

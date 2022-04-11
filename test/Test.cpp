@@ -1,6 +1,7 @@
 #include <omx/Database.h>
 
 #include "../src/MemTable.h"
+#include "../src/File.h"
 #include "../src/SSTable.h"
 #include "../src/SSTableRow.h"
 #include "../src/StorageEngine.h"
@@ -42,6 +43,67 @@ TEST(Entry, Get) {
 	ASSERT_EQ(input->getOperationType(), output->getOperationType());
 	ASSERT_EQ(input->getKey().id, output->getKey().id);
 	ASSERT_EQ(input->getData(), output->getData());
+}
+
+TEST(File, ReadWrite) {
+	CLEAR_DIR(temp_dir);
+
+	auto file = omx::File(temp_dir / "file.bin");
+
+	file.append("0123456789");
+
+	{
+		std::string str;
+
+		file.read(0, 3, str);
+
+		ASSERT_EQ(str, "012");
+	}
+
+	{
+		std::string str;
+
+		file.read(4, 3, str);
+
+		ASSERT_EQ(str, "456");
+	}
+
+	{
+		std::string str;
+
+		auto file2 = omx::File(temp_dir / "file2.bin");
+
+		ASSERT_THROW(file2.read(4, 3, str), std::runtime_error);
+	}
+
+	{
+		std::string str;
+
+		ASSERT_THROW(file.read(4, 100, str), std::runtime_error);
+	}
+
+	{
+		std::string str;
+
+		file.write(2, "xxx");
+
+		file.read(0, 10, str);
+
+		ASSERT_EQ(str, "01xxx56789");
+	}
+
+	{
+		std::string str;
+
+		file.write(8, "abc");
+
+		ASSERT_THROW(file.read(0, 12, str), std::runtime_error);
+
+		file.read(0, 11, str);
+
+		ASSERT_EQ(str, "01xxx567abc");
+	}
+
 }
 
 TEST(Index, ReadWrite) {

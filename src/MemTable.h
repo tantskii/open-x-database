@@ -28,7 +28,7 @@ namespace omx {
 
 		bool get(Key key, std::string& value);
 
-		void dump(size_t fileId, std::ostream& os, Index& index);
+		void dump(std::ostream& os);
 
 		void setWriteAheadLog(const std::string& path);
 
@@ -42,7 +42,7 @@ namespace omx {
 
 		SSTable createSortedStringsTable() const;
 
-		Index&& createIndex(size_t fileId) const;
+		Index createIndex(size_t fileId) const;
 
 	private:
 

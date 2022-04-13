@@ -35,7 +35,6 @@ namespace omx {
 		void load(std::istream& stream);
 
 	private:
-		mutable std::shared_mutex m_mutex;
 		std::unordered_map<Key, SearchHint, Hasher> m_map;
 	};
 

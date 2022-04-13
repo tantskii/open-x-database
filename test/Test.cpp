@@ -321,7 +321,6 @@ TEST(MemTable, Remove) {
 TEST(MemTable, Dump) {
 	omx::MemTable table;
 	omx::SSTableRowPtr entry;
-	omx::Index index;
 	omx::SearchHint hint;
 	std::string data;
 	std::string buffer;
@@ -332,7 +331,10 @@ TEST(MemTable, Dump) {
 	table.remove(omx::Key(1));
 
 	std::ostringstream os;
-	table.dump(0, os, index);
+
+	auto&& index = table.createIndex(0);
+
+	table.dump(os);
 
 	data = os.str();
 

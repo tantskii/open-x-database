@@ -81,7 +81,7 @@ namespace omx {
 		return true;
 	}
 
-	void MemTable::dump(size_t fileId, std::ostream& os, Index& index) {
+	void MemTable::dump(std::ostream& os) {
 		std::unique_lock lock(m_mutex);
 
 		m_isImmutable = true;
@@ -104,8 +104,6 @@ namespace omx {
 			os.write(data.data(), data.size());
 
 			size = data.size();
-
-			index.insert(insertKey.key, SearchHint(fileId, offset, size));
 
 			offset += size;
 		}
@@ -149,7 +147,7 @@ namespace omx {
 		return table;
 	}
 
-	Index&& MemTable::createIndex(const size_t fileId) const {
+	Index MemTable::createIndex(const size_t fileId) const {
 		std::shared_lock lock(m_mutex);
 
 		Index index;

@@ -13,13 +13,15 @@ namespace omx {
 		m_memTable->put(key, value);
 
 		if (m_memTable->getApproximateSize() >= m_memTableLimit) {
-			size_t segment = m_segmentId++;
-			std::string chunkName = "segment_" + std::to_string(segment) + ".bin";
-			std::ofstream stream(m_dir / chunkName, std::ios::binary);
-			std::ofstream indexStream(m_indexFileName, std::ios::binary | std::ios::app);
+			auto segment   = m_segmentId++;
+			auto chunkName = "segment_" + std::to_string(segment) + ".bin";
 
-			Index index;
-			m_memTable->dump(segment, stream, index);
+			auto memTableStream = std::ofstream(m_dir / chunkName, std::ios::binary);
+			auto indexStream    = std::ofstream(m_indexFileName, std::ios::binary | std::ios::app);
+
+			auto index = m_memTable->createIndex(segment);
+			m_memTable->dump(memTableStream);
+
 			index.dump(indexStream);
 			m_index.merge(index);
 
@@ -43,8 +45,8 @@ namespace omx {
 			return false;
 		}
 
-		std::string chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";
-		std::ifstream stream(m_dir / chunkName, std::ios::binary);
+		auto chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";
+		auto stream = std::ifstream(m_dir / chunkName, std::ios::binary);
 
 		std::string data;
 		data.resize(hint.size);
@@ -53,14 +55,15 @@ namespace omx {
 		stream.read(data.data(), data.size());
 		stream.peek();
 
-		SSTableRowPtr row = deserialize(data);
+		auto row = deserialize(data);
 
 		if (row->getOperationType() == EntryType::Remove) {
 			return false;
 		}
 
-		const std::string& compressed = row->getData();
-		UInt128 checksum = m_hasher->hash(compressed);
+		const auto& compressed = row->getData();
+		const auto checksum = m_hasher->hash(compressed);
+
 		if (row->getChecksum() != checksum) {
 			throw std::runtime_error("data corrupted");
 		}
@@ -77,13 +80,13 @@ namespace omx {
 		m_hasher = createHasher(m_opts.hashType);
 		m_memTableLimit = m_opts.maxMemTableSize;
 
-		std::ifstream memTableStream(m_walFileName, std::ios::binary | std::ios::in);
+		auto memTableStream = std::ifstream(m_walFileName, std::ios::binary | std::ios::in);
 		m_memTable->restoreFromLog(memTableStream);
 		m_memTable->setWriteAheadLog(m_walFileName);
 		m_memTable->setCompression(m_compressor);
 		m_memTable->setHasher(m_hasher);
 
-		std::ifstream indexStream(m_indexFileName, std::ios::binary | std::ios::in);
+		auto indexStream = std::ifstream(m_indexFileName, std::ios::binary | std::ios::in);
 		m_index.load(indexStream);
 	}
 
@@ -112,19 +115,18 @@ namespace omx {
 
 	StorageEngine::StorageEngine(std::string dir, Options options) {
 		m_opts = options;
-
 		open(std::move(dir));
 	}
 
 	void StorageEngine::saveOptions() const {
-		std::ofstream stream(m_optionsFileName, std::ios::binary);
+		auto stream = std::ofstream(m_optionsFileName, std::ios::binary);
 		stream.write(reinterpret_cast<const char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
 		stream.write(reinterpret_cast<const char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
 		stream.flush();
 	}
 
 	void StorageEngine::loadOptions() {
-		std::ifstream stream(m_optionsFileName, std::ios::binary);
+		auto stream = std::ifstream(m_optionsFileName, std::ios::binary);
 		stream.read(reinterpret_cast<char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
 		stream.read(reinterpret_cast<char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
 		stream.peek();

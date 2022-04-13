@@ -46,30 +46,26 @@ namespace omx {
 		std::string chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";
 		std::ifstream stream(m_dir / chunkName, std::ios::binary);
 
-		UInt128 checksum;
-
-		std::string compressed;
-		compressed.resize(hint.size - sizeof(checksum));
+		std::string data;
+		data.resize(hint.size);
 
 		stream.seekg(hint.offset);
-		stream.read(compressed.data(), compressed.size());
-		stream.read(reinterpret_cast<char*>(&checksum.first), sizeof(checksum));
+		stream.read(data.data(), data.size());
 		stream.peek();
 
-		if (checksum != m_hasher->hash(compressed)) {
-			return false;
-		}
-
-		std::string uncompressed;
-		m_compressor->uncompress(compressed, uncompressed);
-
-		SSTableRowPtr row = deserialize(uncompressed);
+		SSTableRowPtr row = deserialize(data);
 
 		if (row->getOperationType() == EntryType::Remove) {
 			return false;
 		}
 
-		value = row->getData();
+		const std::string& compressed = row->getData();
+		UInt128 checksum = m_hasher->hash(compressed);
+		if (row->getChecksum() != checksum) {
+			throw std::runtime_error("data corrupted");
+		}
+
+		m_compressor->uncompress(compressed, value);
 
 		return true;
 	}

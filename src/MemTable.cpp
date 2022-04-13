@@ -18,7 +18,14 @@ namespace omx {
 		}
 
 		auto insertKey = InsertKey<Key>(m_counter++, key);
-		auto row = std::make_shared<SSTableRow>(key, value);
+
+		std::string compressed;
+		m_compressor->compress(value, compressed);
+
+		UInt128 checksum = m_hasher->hash(compressed);
+
+		auto row = std::make_shared<SSTableRow>(key, compressed, checksum);
+
 		m_memorySize += row->getRowSize();
 
 		log(row);
@@ -61,7 +68,15 @@ namespace omx {
 			return false;
 		}
 
-		value = row->getData();
+		const std::string& compressed = row->getData();
+
+		const UInt128 checksum = m_hasher->hash(compressed);
+
+		if (checksum != row->getChecksum()) {
+			throw std::runtime_error("invalid checksum");
+		}
+
+		m_compressor->uncompress(compressed, value);
 
 		return true;
 	}
@@ -84,17 +99,11 @@ namespace omx {
 			}
 			prevKeyId = keyId;
 
-			std::string uncompressed = serialize(row);
-			std::string compressed;
-			m_compressor->compress(uncompressed, compressed);
+			std::string data = serialize(row);
 
-			os.write(compressed.data(), compressed.size());
+			os.write(data.data(), data.size());
 
-			UInt128 checksum = m_hasher->hash(compressed);
-
-			os.write(reinterpret_cast<const char*>(&checksum.first), sizeof(checksum));
-
-			size = compressed.size() + sizeof(checksum);
+			size = data.size();
 
 			index.insert(insertKey.key, SearchHint(fileId, offset, size));
 

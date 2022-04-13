@@ -6,6 +6,8 @@
 #include <string>
 #include <memory>
 
+using UInt128 = std::pair<uint64_t, uint64_t>;
+
 namespace omx {
 
 	enum class EntryType : uint8_t {
@@ -15,9 +17,9 @@ namespace omx {
 
 	class SSTableRow {
 	public:
-		SSTableRow(Key key, std::string value, EntryType entryType);
+		SSTableRow(Key key, std::string value, EntryType entryType, UInt128 checksum = {});
 
-		SSTableRow(Key key, std::string value);
+		SSTableRow(Key key, std::string value, UInt128 checksum = {});
 
 		explicit SSTableRow(Key key = Key());
 
@@ -31,10 +33,13 @@ namespace omx {
 
 		std::size_t getRowSize() const;
 
+		const UInt128& getChecksum() const;
+
 	private:
 		Key m_key;
 		std::string m_value;
 		EntryType m_entryType;
+		UInt128 m_checksum = {0, 0};
 	};
 
 	using SSTableRowPtr = std::shared_ptr<SSTableRow>;

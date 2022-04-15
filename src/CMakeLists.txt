@@ -1,6 +1,6 @@
 
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.77.0 COMPONENTS log REQUIRED)
+find_package(Boost 1.77.0 COMPONENTS system thread log REQUIRED)
 
 set(OMX_HEADERS_DIR ${OMX_INCLUDE_DIR}/omx)
 set(OMX_PUBLIC_HEADERS
@@ -31,6 +31,7 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/StorageEngine.h
     ${OMX_SOURCE_DIR}/SSTable.h
     ${OMX_SOURCE_DIR}/File.h
+    ${OMX_SOURCE_DIR}/Logging/Logging.h
 )
 
 find_package(Threads REQUIRED)
@@ -58,7 +59,7 @@ macro(build_omxdb_lib lib_name lib_type)
         PUBLIC
             omxdb_compression
             omxdb_hashing
-            ${BOOST_LIBRARIES} Boost::log
+            ${BOOST_LIBRARIES} Boost::log Boost::system
     )
 
     set_target_properties(${lib_name}

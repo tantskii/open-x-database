@@ -1,6 +1,7 @@
 #include "MemTable.h"
 #include "SSTable.h"
 #include "Compression/ICompression.h"
+#include "Logging/Logging.h"
 
 namespace omx {
 

@@ -2,11 +2,6 @@
 
 namespace omx {
 
-	std::size_t Index::Hasher::operator()(const Key& key) const {
-		std::hash<std::size_t> hasher;
-		return hasher(key.id);
-	}
-
 	void Index::insert(Key key, SearchHint hint) {
 		m_map.insert_or_assign(key, hint);
 	}

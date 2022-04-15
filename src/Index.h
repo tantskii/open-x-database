@@ -20,10 +20,6 @@ namespace omx {
 	class Index {
 	public:
 
-		struct Hasher {
-			std::size_t operator()(const Key& key) const;
-		};
-
 		void insert(Key key, SearchHint hint);
 
 		void merge(const Index& other);
@@ -35,7 +31,7 @@ namespace omx {
 		void load(std::istream& stream);
 
 	private:
-		std::unordered_map<Key, SearchHint, Hasher> m_map;
+		std::unordered_map<Key, SearchHint, KeyHasher> m_map;
 	};
 
 }

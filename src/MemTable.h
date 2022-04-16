@@ -49,7 +49,6 @@ namespace omx {
 		void log(SSTableRowPtr row);
 
 		std::map<InsertKey<Key>, SSTableRowPtr, std::less<>> m_map;
-		mutable std::shared_mutex m_mutex;
 		size_t m_counter = 0;
 		size_t m_memorySize = 0;
 

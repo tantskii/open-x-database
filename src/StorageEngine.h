@@ -11,9 +11,9 @@ namespace omx {
 
 	class StorageEngine {
 	public:
-		StorageEngine() = default;
+		explicit StorageEngine(Options options = {});
 
-		explicit StorageEngine(std::string dir, Options options = {});
+		~StorageEngine();
 
 		void open(std::string dir);
 
@@ -23,9 +23,14 @@ namespace omx {
 
 		bool get(Key key, std::string& value) const;
 
-		void load();
-
 	private:
+
+		void resetMemTable();
+
+		void makeSnapshot();
+
+		bool findInMemory(Key key, std::string& value) const;
+		bool findOnDisk(Key key, std::string& value) const;
 
 		void saveOptions() const;
 

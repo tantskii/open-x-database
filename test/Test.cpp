@@ -385,7 +385,9 @@ TEST(MemTable, Restore) {
 TEST(StorageEngine, ReadWrite) {
 	CLEAR_DIR(temp_dir);
 
-	omx::StorageEngine storage(temp_dir);
+	omx::StorageEngine storage;
+	storage.open(temp_dir);
+
 	std::string input = "111111111111111111111111111111111111111111111111111111";
 	std::string output1;
 	std::string output2;
@@ -416,7 +418,8 @@ TEST(StorageEngine, Restore) {
 	std::string output3;
 
 	{
-		omx::StorageEngine storage(temp_dir);
+		omx::StorageEngine storage;
+		storage.open(temp_dir);
 
 		for (int i = 1; i <= 100000; ++i) {
 			storage.put(omx::Key(i), input);
@@ -427,7 +430,8 @@ TEST(StorageEngine, Restore) {
 		}
 	}
 
-	omx::StorageEngine storage(temp_dir);
+	omx::StorageEngine storage;
+	storage.open(temp_dir);
 
 	ASSERT_TRUE(storage.get(omx::Key(3), output1));
 	ASSERT_EQ(output1, input);

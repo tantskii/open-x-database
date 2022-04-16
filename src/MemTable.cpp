@@ -12,8 +12,6 @@ namespace omx {
 	}
 
 	void MemTable::put(Key key, const std::string& value) {
-		std::unique_lock lock(m_mutex);
-
 		if (m_isImmutable) {
 			return;
 		}
@@ -34,8 +32,6 @@ namespace omx {
 	}
 
 	void MemTable::remove(Key key) {
-		std::unique_lock lock(m_mutex);
-
 		if (m_isImmutable) {
 			return;
 		}
@@ -49,8 +45,6 @@ namespace omx {
 	}
 
 	bool MemTable::get(Key key, std::string& value) {
-		std::shared_lock lock(m_mutex);
-
 		if (m_isImmutable) {
 			return false;
 		}
@@ -74,6 +68,7 @@ namespace omx {
 		const UInt128 checksum = m_hasher->hash(compressed);
 
 		if (checksum != row->getChecksum()) {
+			log::error("[%s] invalid checksum", __PRETTY_FUNCTION__);
 			throw std::runtime_error("invalid checksum");
 		}
 
@@ -83,8 +78,6 @@ namespace omx {
 	}
 
 	void MemTable::dump(std::ostream& os) {
-		std::unique_lock lock(m_mutex);
-
 		m_isImmutable = true;
 
 		size_t offset = 0;
@@ -113,32 +106,31 @@ namespace omx {
 	}
 
 	void MemTable::setWriteAheadLog(const std::string& path) {
-		std::unique_lock lock(m_mutex);
 		m_wal = std::make_unique<WriteAheadLog>(path);
 	}
 
 	void MemTable::restoreFromLog(std::istream& stream) {
-		std::unique_lock lock(m_mutex);
+		if (stream.bad()) {
+			log::error("[%s] bad input stream", __PRETTY_FUNCTION__);
+			throw std::runtime_error("bad input stream");
+		}
 
 		while (!stream.eof()) {
 			auto row = deserialize(stream);
 
-			auto key = row->getKey();
-			auto insertKey = InsertKey<Key>(m_counter++, key);
-			m_map.insert({insertKey, std::move(row)});
+			auto key = InsertKey<Key>(m_counter++, row->getKey());
+
+			m_map.insert({key, std::move(row)});
 
 			stream.peek();
 		}
 	}
 
 	size_t MemTable::getApproximateSize() const {
-		std::shared_lock lock(m_mutex);
 		return m_memorySize;
 	}
 
 	SSTable MemTable::createSortedStringsTable() const {
-		std::shared_lock lock(m_mutex);
-
 		SSTable table;
 
 		for (const auto& [_, row]: m_map) {
@@ -149,8 +141,6 @@ namespace omx {
 	}
 
 	Index MemTable::createIndex(const size_t fileId) const {
-		std::shared_lock lock(m_mutex);
-
 		Index index;
 		size_t offset = 0;
 		size_t size = 0;
@@ -173,7 +163,6 @@ namespace omx {
 	}
 
 	void MemTable::setCompression(ICompressionPtr compressor) {
-		std::unique_lock lock(m_mutex);
 		m_compressor = std::move(compressor);
 	}
 
@@ -183,7 +172,6 @@ namespace omx {
 	}
 
 	void MemTable::setHasher(IHasherPtr hasher) {
-		std::unique_lock lock(m_mutex);
 		m_hasher = std::move(hasher);
 	}
 }

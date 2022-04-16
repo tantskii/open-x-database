@@ -1,5 +1,6 @@
 #include "StorageEngine.h"
 #include "Compression/ICompression.h"
+#include "Logging/Logging.h"
 
 #include <fstream>
 #include <memory>
@@ -10,7 +11,12 @@ namespace omx {
 	namespace fs = std::filesystem;
 
 	void StorageEngine::put(omx::Key key, const std::string& value) {
-		m_memTable->put(key, value);
+		std::string compressed;
+		m_compressor->compress(value, compressed);
+
+		auto checksum = m_hasher->hash(compressed);
+
+		m_memTable->put(key, compressed, checksum);
 
 		if (m_memTable->getApproximateSize() >= m_memTableLimit) {
 			makeSnapshot();
@@ -22,11 +28,21 @@ namespace omx {
 	}
 
 	bool StorageEngine::get(omx::Key key, std::string& value) const {
-		if (findInMemory(key, value)) {
+		omx::UInt128 checksum;
+		std::string compressed;
+
+		if (findInMemory(key, compressed, checksum) || findOnDisk(key, compressed, checksum)) {
+			if (m_hasher->hash(compressed) != checksum) {
+				log::error("[%s] Data corrupted: invalid checksum", __PRETTY_FUNCTION__);
+				throw std::runtime_error("data corrupted: invalid checksum");
+			}
+
+			m_compressor->uncompress(compressed, value);
+
 			return true;
 		}
 
-		return findOnDisk(key, value);
+		return false;
 	}
 
 	void StorageEngine::open(std::string dir) {
@@ -79,8 +95,6 @@ namespace omx {
 	void StorageEngine::resetMemTable() {
 		m_memTable = std::make_unique<MemTable>();
 		m_memTable->setWriteAheadLog(m_walFileName);
-		m_memTable->setCompression(m_compressor);
-		m_memTable->setHasher(m_hasher);
 	}
 
 	void StorageEngine::makeSnapshot() {
@@ -99,11 +113,11 @@ namespace omx {
 		resetMemTable();
 	}
 
-	bool StorageEngine::findInMemory(Key key, std::string& value) const {
-		return m_memTable->get(key, value);
+	bool StorageEngine::findInMemory(Key key, std::string& value, UInt128& checksum) const {
+		return m_memTable->get(key, value, checksum);
 	}
 
-	bool StorageEngine::findOnDisk(Key key, std::string& value) const {
+	bool StorageEngine::findOnDisk(Key key, std::string& value, UInt128& checksum) const {
 		SearchHint hint;
 		if (!m_index.get(key, hint)) {
 			return false;
@@ -125,14 +139,8 @@ namespace omx {
 			return false;
 		}
 
-		const auto& compressed = row->getData();
-		const auto checksum = m_hasher->hash(compressed);
-
-		if (row->getChecksum() != checksum) {
-			throw std::runtime_error("data corrupted");
-		}
-
-		m_compressor->uncompress(compressed, value);
+		value = row->getData();
+		checksum = row->getChecksum();
 
 		return true;
 	}

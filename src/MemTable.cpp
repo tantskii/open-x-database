@@ -11,24 +11,23 @@ namespace omx {
 		}
 	}
 
-	void MemTable::put(Key key, const std::string& value) {
+	void MemTable::put(Key key, const std::string& value, const UInt128& checksum) {
 		if (m_isImmutable) {
 			return;
 		}
 
 		auto insertKey = InsertKey<Key>(m_counter++, key);
 
-		std::string compressed;
-		m_compressor->compress(value, compressed);
-
-		UInt128 checksum = m_hasher->hash(compressed);
-
-		auto row = std::make_shared<SSTableRow>(key, compressed, checksum);
+		auto row = std::make_shared<SSTableRow>(key, value, checksum);
 
 		m_memorySize += row->getRowSize();
 
 		log(row);
 		m_map.insert({insertKey, std::move(row)});
+	}
+
+	void MemTable::put(Key key, const std::string& value) {
+		put(key, value, UInt128{});
 	}
 
 	void MemTable::remove(Key key) {
@@ -44,7 +43,7 @@ namespace omx {
 		m_map.insert({insertKey, std::move(row)});
 	}
 
-	bool MemTable::get(Key key, std::string& value) {
+	bool MemTable::get(Key key, std::string& value, UInt128& checksum) {
 		if (m_isImmutable) {
 			return false;
 		}
@@ -63,18 +62,15 @@ namespace omx {
 			return false;
 		}
 
-		const std::string& compressed = row->getData();
-
-		const UInt128 checksum = m_hasher->hash(compressed);
-
-		if (checksum != row->getChecksum()) {
-			log::error("[%s] invalid checksum", __PRETTY_FUNCTION__);
-			throw std::runtime_error("invalid checksum");
-		}
-
-		m_compressor->uncompress(compressed, value);
+		value = row->getData();
+		checksum = row->getChecksum();
 
 		return true;
+	}
+
+	bool MemTable::get(Key key, std::string& value) {
+		UInt128 _;
+		return get(key, value, _);
 	}
 
 	void MemTable::dump(std::ostream& os) {
@@ -162,16 +158,6 @@ namespace omx {
 		return std::move(index);
 	}
 
-	void MemTable::setCompression(ICompressionPtr compressor) {
-		m_compressor = std::move(compressor);
-	}
 
-	MemTable::MemTable() {
-		m_compressor = createCompressor(CompressionType::NoCompression);
-		m_hasher = createHasher(HashType::NoHash);
-	}
-
-	void MemTable::setHasher(IHasherPtr hasher) {
-		m_hasher = std::move(hasher);
-	}
+	MemTable::MemTable() = default;
 }

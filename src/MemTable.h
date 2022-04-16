@@ -24,17 +24,16 @@ namespace omx {
 
 		void put(Key key, const std::string& value);
 
+		void put(Key key, const std::string& value, const UInt128& checksum);
+
 		void remove(Key key);
 
 		bool get(Key key, std::string& value);
+		bool get(Key key, std::string& value, UInt128& checksum);
 
 		void dump(std::ostream& os);
 
 		void setWriteAheadLog(const std::string& path);
-
-		void setCompression(ICompressionPtr compressor);
-
-		void setHasher(IHasherPtr hasher);
 
 		void restoreFromLog(std::istream& stream);
 
@@ -55,8 +54,6 @@ namespace omx {
 		bool m_isImmutable = false;
 
 		WriteAheadLogPtr m_wal;
-		ICompressionPtr m_compressor;
-		IHasherPtr m_hasher;
 	};
 }
 

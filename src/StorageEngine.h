@@ -29,8 +29,8 @@ namespace omx {
 
 		void makeSnapshot();
 
-		bool findInMemory(Key key, std::string& value) const;
-		bool findOnDisk(Key key, std::string& value) const;
+		bool findInMemory(Key key, std::string& value, UInt128& checksum) const;
+		bool findOnDisk(Key key, std::string& value, UInt128& checksum) const;
 
 		void saveOptions() const;
 

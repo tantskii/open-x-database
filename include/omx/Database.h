@@ -48,7 +48,7 @@ namespace omx {
 		 * @param value [out] value @see Bytes
 		 * @throws std::runtime_error on error
 		 */
-		void get(Key key, std::string& value);
+		bool get(Key key, std::string& value);
 
 	private:
 		static constexpr std::size_t kImplSize = 272;

@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <thread>
 
 namespace fs = std::filesystem;
 
@@ -441,3 +442,69 @@ TEST(StorageEngine, Restore) {
 	ASSERT_FALSE(storage.get(omx::Key(10), output3));
 }
 
+TEST(Database, ReadWriteThreaded) {
+	CLEAR_DIR(temp_dir);
+
+	const size_t numReadThreads = 8;
+	const size_t numWriteThreads = 2;
+	const size_t numInserts = 100'000;
+	const size_t numReads = 100'000;
+	const size_t valueLength = 100;
+
+	omx::Database database;
+	database.open(temp_dir.c_str());
+
+	std::vector<std::thread> readThreads(numReadThreads);
+	std::vector<std::thread> writeThreads(numWriteThreads);
+
+	for (int i = 1; i <= writeThreads.size(); ++i) {
+		writeThreads[i - 1] = std::thread([&](size_t index) {
+			for (size_t j = index; j <= numInserts; j += numWriteThreads) {
+				std::string value(valueLength, char(j % 10));
+				database.put(omx::Key(j), value);
+
+				if (j == 10000) {
+					database.remove(omx::Key(10));
+				}
+			}
+		}, i);
+	}
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+	for (int i = 1; i <= readThreads.size(); ++i) {
+		readThreads[i - 1] = std::thread([&](size_t index) {
+			std::string value;
+
+			for (size_t j = index; j <= numReads; j += numReadThreads) {
+				bool status = database.get(omx::Key(j), value);
+
+				if (status) {
+					std::string reference(valueLength, char(j % 10));
+					ASSERT_EQ(value, reference);
+				}
+			}
+		}, i);
+	}
+
+	for (auto& thread: writeThreads) {
+		thread.join();
+	}
+
+	for (auto& thread: readThreads) {
+		thread.join();
+	}
+
+	std::string out1;
+	std::string inp1(valueLength, char(3 % 10));
+	ASSERT_TRUE(database.get(omx::Key(3), out1));
+	ASSERT_EQ(out1, inp1);
+
+	std::string out2;
+	std::string inp2(valueLength, char(99'999 % 10));
+	ASSERT_TRUE(database.get(omx::Key(99'999), out2));
+	ASSERT_EQ(out2, inp2);
+
+	ASSERT_FALSE(database.get(omx::Key(100'001), out2));
+	ASSERT_FALSE(database.get(omx::Key(10), out2));
+}

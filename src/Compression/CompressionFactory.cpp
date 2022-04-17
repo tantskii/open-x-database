@@ -16,6 +16,17 @@ namespace omx {
 		}
 	}
 
+	const char* toString(CompressionType compressionType) {
+		switch (compressionType) {
+			case CompressionType::NoCompression:
+				return "NoCompression";
+			case CompressionType::Snappy:
+				return "Snappy";
+			default:
+				return "Unknown";
+		}
+	}
+
 }
 
 

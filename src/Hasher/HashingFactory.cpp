@@ -15,5 +15,16 @@ namespace omx {
 		}
 	}
 
+	const char* toString(HashType hashType) {
+		switch (hashType) {
+			case HashType::NoHash:
+				return "NoHash";
+			case HashType::CityHash128:
+				return "CityHash128";
+			default:
+				return "Unknown";
+		}
+	}
+
 }
 

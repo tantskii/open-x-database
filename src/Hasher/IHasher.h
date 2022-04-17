@@ -20,4 +20,6 @@ namespace omx {
 	using IHasherPtr = std::shared_ptr<IHasher>;
 
 	IHasherPtr createHasher(HashType hashType);
+
+	const char* toString(HashType hashType);
 }

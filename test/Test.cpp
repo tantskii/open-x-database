@@ -332,13 +332,13 @@ TEST(MemTable, Dump) {
 
 	std::ostringstream os;
 
-	auto&& index = table.createIndex(0);
+	auto index = table.createIndex(0);
 
 	table.dump(os);
 
 	data = os.str();
 
-	ASSERT_TRUE(index.get(omx::Key(2), hint));
+	ASSERT_TRUE(index->get(omx::Key(2), hint));
 	buffer = data.substr(hint.offset, hint.size);
 	entry = omx::deserialize(buffer);
 
@@ -346,7 +346,7 @@ TEST(MemTable, Dump) {
 	ASSERT_EQ(entry->getData(), "222222222222222222222222222222222222222222222222222222");
 	ASSERT_EQ(entry->getKey(), omx::Key(2));
 
-	ASSERT_TRUE(index.get(omx::Key(1), hint));
+	ASSERT_TRUE(index->get(omx::Key(1), hint));
 	buffer = data.substr(hint.offset, hint.size);
 	entry = omx::deserialize(buffer);
 

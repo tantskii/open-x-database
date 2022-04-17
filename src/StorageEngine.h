@@ -6,6 +6,8 @@
 
 #include <atomic>
 #include <filesystem>
+#include <shared_mutex>
+#include <mutex>
 
 namespace omx {
 
@@ -36,10 +38,10 @@ namespace omx {
 
 		void loadOptions();
 
-		std::unique_ptr<MemTable> m_memTable;
+		MemTablePtr m_memTable;
 		ICompressionPtr m_compressor;
 		IHasherPtr m_hasher;
-		Index m_index;
+		IndexPtr m_index;
 
 		std::atomic<size_t> m_segmentId = 0;
 		size_t m_memTableLimit = 1 * 1024 * 1024; // 1 mb
@@ -48,6 +50,8 @@ namespace omx {
 		std::string m_indexFileName;
 		std::string m_optionsFileName;
 		Options m_opts;
+
+		mutable std::shared_mutex m_mutex;
 	};
 
 }

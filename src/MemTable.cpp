@@ -11,19 +11,24 @@ namespace omx {
 		}
 	}
 
-	void MemTable::put(Key key, const std::string& value, const UInt128& checksum) {
+	void MemTable::put(Key key, const std::string& value, const UInt128& checksum, EntryType entryType) {
 		if (m_isImmutable) {
-			return;
+			log::error("[%s] attempt to write to immutable memory table", __PRETTY_FUNCTION__);
+			throw std::runtime_error("attempt to write to immutable memory table");
 		}
 
 		auto insertKey = InsertKey<Key>(m_counter++, key);
 
-		auto row = std::make_shared<SSTableRow>(key, value, checksum);
+		auto row = std::make_shared<SSTableRow>(key, value, entryType, checksum);
 
 		m_memorySize += row->getRowSize();
 
 		log(row);
 		m_map.insert({insertKey, std::move(row)});
+	}
+
+	void MemTable::put(Key key, const std::string& value, const UInt128& checksum) {
+		put(key, value, checksum, EntryType::Put);
 	}
 
 	void MemTable::put(Key key, const std::string& value) {
@@ -31,32 +36,22 @@ namespace omx {
 	}
 
 	void MemTable::remove(Key key) {
-		if (m_isImmutable) {
-			return;
-		}
-
-		auto insertKey = InsertKey<Key>(m_counter++, key);
-		auto row = std::make_shared<SSTableRow>(key);
-		m_memorySize += row->getRowSize();
-
-		log(row);
-		m_map.insert({insertKey, std::move(row)});
+		put(key, "", UInt128{}, EntryType::Remove);
 	}
 
 	bool MemTable::get(Key key, std::string& value, UInt128& checksum) {
 		if (m_isImmutable) {
-			return false;
+			log::error("[%s] attempt to read from immutable memory table", __PRETTY_FUNCTION__);
+			throw std::runtime_error("attempt to read from immutable memory table");
 		}
 
-		auto searchKey = SearchKey<Key>(key);
-
-		auto it = m_map.find(searchKey);
+		auto it = m_map.find(SearchKey(key));
 
 		if (it == m_map.end()) {
 			return false;
 		}
 
-		const auto& row = it->second;
+		auto row = it->second;
 
 		if (row->getOperationType() == EntryType::Remove) {
 			return false;
@@ -74,8 +69,6 @@ namespace omx {
 	}
 
 	void MemTable::dump(std::ostream& os) {
-		m_isImmutable = true;
-
 		size_t offset = 0;
 		size_t size = 0;
 
@@ -89,7 +82,7 @@ namespace omx {
 			}
 			prevKeyId = keyId;
 
-			std::string data = serialize(row);
+			auto data = serialize(row);
 
 			os.write(data.data(), data.size());
 
@@ -127,7 +120,7 @@ namespace omx {
 	}
 
 	SSTable MemTable::createSortedStringsTable() const {
-		SSTable table;
+		auto table = SSTable();
 
 		for (const auto& [_, row]: m_map) {
 			table.append(row);
@@ -136,8 +129,9 @@ namespace omx {
 		return table;
 	}
 
-	Index MemTable::createIndex(const size_t fileId) const {
-		Index index;
+	IndexPtr MemTable::createIndex(const size_t fileId) const {
+		auto index = std::make_unique<Index>();
+
 		size_t offset = 0;
 		size_t size = 0;
 		size_t prevKeyId = std::string::npos;
@@ -151,13 +145,20 @@ namespace omx {
 			prevKeyId = keyId;
 
 			size = row->getRowSize();
-			index.insert(insertKey.key, SearchHint(fileId, offset, size));
+			index->insert(insertKey.key, SearchHint(fileId, offset, size));
 			offset += size;
 		}
 
-		return std::move(index);
+		return index;
 	}
 
+	void MemTable::makeImmutable() {
+		if (m_isImmutable) {
+			log::error("[%s] memory table is already immutable", __PRETTY_FUNCTION__);
+			throw std::runtime_error("memory table is already immutable");
+		}
+		m_isImmutable = true;
+	}
 
 	MemTable::MemTable() = default;
 }

@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <shared_mutex>
 #include <mutex>
+#include <memory>
 #include <iostream>
 
 namespace omx {
@@ -34,4 +35,5 @@ namespace omx {
 		std::unordered_map<Key, SearchHint, KeyHasher> m_map;
 	};
 
+	using IndexPtr = std::unique_ptr<Index>;
 }

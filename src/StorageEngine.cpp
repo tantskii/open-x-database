@@ -16,14 +16,19 @@ namespace omx {
 
 		auto checksum = m_hasher->hash(compressed);
 
-		m_memTable->put(key, compressed, checksum);
+		{
+			auto lock = std::unique_lock(m_mutex);
 
-		if (m_memTable->getApproximateSize() >= m_memTableLimit) {
-			makeSnapshot();
+			m_memTable->put(key, compressed, checksum);
+
+			if (m_memTable->getApproximateSize() >= m_memTableLimit) {
+				makeSnapshot();
+			}
 		}
 	}
 
 	void StorageEngine::remove(omx::Key key) {
+		auto lock = std::unique_lock(m_mutex);
 		m_memTable->remove(key);
 	}
 
@@ -61,16 +66,19 @@ namespace omx {
 		m_hasher = createHasher(m_opts.hashType);
 
 		m_memTableLimit = m_opts.maxMemTableSize;
-		resetMemTable();
+
+		m_memTable = std::make_unique<MemTable>();
+		m_index = std::make_unique<Index>();
 
 		if (fs::exists(m_walFileName)) {
 			auto stream = std::ifstream(m_walFileName, std::ios::binary | std::ios::in);
 			m_memTable->restoreFromLog(stream);
 		}
+		m_memTable->setWriteAheadLog(m_walFileName);
 
 		if (fs::exists(m_indexFileName)) {
 			auto stream = std::ifstream(m_indexFileName, std::ios::binary | std::ios::in);
-			m_index.load(stream);
+			m_index->load(stream);
 		}
 	}
 
@@ -107,20 +115,24 @@ namespace omx {
 		auto index = m_memTable->createIndex(segment);
 		m_memTable->dump(memTableStream);
 
-		index.dump(indexStream);
-		m_index.merge(index);
+		index->dump(indexStream);
+		m_index->merge(*index);
 
 		resetMemTable();
 	}
 
 	bool StorageEngine::findInMemory(Key key, std::string& value, UInt128& checksum) const {
+		auto lock = std::shared_lock(m_mutex);
 		return m_memTable->get(key, value, checksum);
 	}
 
 	bool StorageEngine::findOnDisk(Key key, std::string& value, UInt128& checksum) const {
 		SearchHint hint;
-		if (!m_index.get(key, hint)) {
-			return false;
+		{
+			auto lock = std::shared_lock(m_mutex);
+			if (!m_index->get(key, hint)) {
+				return false;
+			}
 		}
 
 		auto chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";

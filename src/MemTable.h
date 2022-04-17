@@ -14,6 +14,7 @@
 #include <shared_mutex>
 #include <mutex>
 #include <ostream>
+#include <atomic>
 
 namespace omx {
 
@@ -41,20 +42,26 @@ namespace omx {
 
 		SSTable createSortedStringsTable() const;
 
-		Index createIndex(size_t fileId) const;
+		IndexPtr createIndex(size_t fileId) const;
+
+		void makeImmutable();
 
 	private:
+
+		void put(Key key, const std::string& value, const UInt128& checksum, EntryType entryType);
 
 		void log(SSTableRowPtr row);
 
 		std::map<InsertKey<Key>, SSTableRowPtr, std::less<>> m_map;
 		size_t m_counter = 0;
-		size_t m_memorySize = 0;
+		std::atomic<size_t> m_memorySize = 0;
 
-		bool m_isImmutable = false;
+		std::atomic<bool> m_isImmutable = false;
 
 		WriteAheadLogPtr m_wal;
 	};
+
+	using MemTablePtr = std::unique_ptr<MemTable>;
 }
 
 

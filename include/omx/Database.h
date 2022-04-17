@@ -51,7 +51,7 @@ namespace omx {
 		void get(Key key, std::string& value);
 
 	private:
-		static constexpr std::size_t kImplSize = 264;
+		static constexpr std::size_t kImplSize = 272;
 		static constexpr std::size_t kImplAlign = 8;
 		omx::FastPimpl<omx::StorageEngine, kImplSize, kImplAlign> m_impl;
 	};

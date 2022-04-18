@@ -125,8 +125,8 @@ namespace omx {
 		return table;
 	}
 
-	IndexPtr MemTable::createIndex(const size_t fileId) const {
-		auto index = std::make_unique<Index>();
+	SSTableIndexPtr MemTable::createSortedStringsTableIndex(size_t fileId) const {
+		auto index = std::make_unique<SSTableIndex>(fileId);
 
 		size_t offset = 0;
 		size_t size = 0;
@@ -141,7 +141,7 @@ namespace omx {
 			prevKeyId = keyId;
 
 			size = row->getRowSize();
-			index->insert(insertKey.key, SearchHint(fileId, offset, size));
+			index->insert(insertKey.key, FileSearchHint(offset, size));
 			offset += size;
 		}
 

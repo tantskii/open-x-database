@@ -52,7 +52,7 @@ namespace omx {
 		m_opts = options;
 		m_dir = std::move(dir);
 		m_walFileName     = m_dir / "wal.bin";
-		m_indexFileName   = m_dir / "index.bin";
+		m_indexDir        = m_dir / "dir";
 		m_optionsFileName = m_dir / "options.bin";
 
 		if (fs::exists(m_optionsFileName)) {
@@ -75,9 +75,12 @@ namespace omx {
 		}
 		m_memTable->setWriteAheadLog(m_walFileName);
 
-		if (fs::exists(m_indexFileName)) {
-			auto stream = std::ifstream(m_indexFileName, std::ios::binary | std::ios::in);
-			m_index->load(stream);
+		if (!fs::exists(m_indexDir)) {
+			fs::create_directory(m_indexDir);
+		}
+
+		if (!fs::is_empty(m_indexDir)) {
+			m_index->load(m_indexDir);
 		}
 	}
 
@@ -101,17 +104,20 @@ namespace omx {
 	}
 
 	void StorageEngine::makeSnapshot() {
-		auto segment   = m_segmentId++;
-		auto chunkName = "segment_" + std::to_string(segment) + ".bin";
+		const auto segment       = m_segmentId++;
+		const auto chunkFileName = m_dir / ("segment_" + std::to_string(segment) + ".bin");
+		const auto indexFileName = m_indexDir / ("index_" + std::to_string(segment) + ".bin");
 
-		auto memTableStream = std::ofstream(m_dir / chunkName, std::ios::binary);
-		auto indexStream    = std::ofstream(m_indexFileName, std::ios::binary | std::ios::app);
+		auto memTableStream = std::ofstream(chunkFileName, std::ios::binary);
+		auto indexStream    = std::ofstream(indexFileName, std::ios::binary);
 
-		auto index = m_memTable->createIndex(segment);
+		auto tableIndex = m_memTable->createSortedStringsTableIndex(segment);
+
 		m_memTable->dump(memTableStream);
 
-		index->dump(indexStream);
-		m_index->merge(*index);
+		tableIndex->dump(indexStream);
+
+		m_index->update(std::move(tableIndex));
 
 		resetMemTable();
 	}

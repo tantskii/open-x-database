@@ -38,11 +38,11 @@ namespace omx {
 
 		void restoreFromLog(std::istream& stream);
 
-		size_t getApproximateSize() const;
+		[[nodiscard]] size_t getApproximateSize() const;
 
-		SSTable createSortedStringsTable() const;
+		[[nodiscard]] SSTable createSortedStringsTable() const;
 
-		IndexPtr createIndex(size_t fileId) const;
+		[[nodiscard]] SSTableIndexPtr createSortedStringsTableIndex(size_t fileId) const;
 
 		void makeImmutable();
 

@@ -43,7 +43,7 @@ namespace omx {
 		size_t m_memTableLimit = 1 * 1024 * 1024; // 1 mb
 		std::filesystem::path m_dir;
 		std::string m_walFileName;
-		std::string m_indexFileName;
+		std::filesystem::path m_indexDir;
 		std::string m_optionsFileName;
 		Options m_opts;
 

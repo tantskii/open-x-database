@@ -3,6 +3,7 @@
 #include <omx/Key.h>
 
 #include <unordered_map>
+#include <memory>
 #include <fstream>
 
 namespace omx {
@@ -34,5 +35,4 @@ namespace omx {
 	};
 
 	using SSTableIndexPtr = std::unique_ptr<SSTableIndex>;
-
 }

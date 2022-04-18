@@ -134,72 +134,97 @@ TEST(Index, ReadWrite) {
 	ASSERT_EQ(hint.offset, 0);
 }
 
-TEST(Index, Merge) {
-	omx::Index index_0;
-	omx::Index index_1;
+TEST(Index, Update) {
+	auto index_1 = std::make_unique<omx::SSTableIndex>(1);
+	auto index_2 = std::make_unique<omx::SSTableIndex>(2);
+	auto index   = std::make_unique<omx::Index>();
 	omx::SearchHint hint;
 
-	index_0.insert(omx::Key(1), omx::SearchHint(1, 100));
-	index_0.insert(omx::Key(2), omx::SearchHint(1, 200));
-	index_0.insert(omx::Key(3), omx::SearchHint(1, 300));
-	index_1.insert(omx::Key(3), omx::SearchHint(2, 400));
-	index_1.insert(omx::Key(4), omx::SearchHint(2, 500));
-	index_0.merge(index_1);
+	index_1->insert(omx::Key(1), omx::FileSearchHint(100, 10));
+	index_1->insert(omx::Key(2), omx::FileSearchHint(200, 20));
+	index_1->insert(omx::Key(3), omx::FileSearchHint(300, 30));
+	index_2->insert(omx::Key(3), omx::FileSearchHint(400, 40));
+	index_2->insert(omx::Key(4), omx::FileSearchHint(500, 50));
 
-	ASSERT_TRUE(index_0.get(omx::Key(1), hint));
+	index->update(std::move(index_1));
+	index->update(std::move(index_2));
+
+	ASSERT_TRUE(index->get(omx::Key(1), hint));
 	ASSERT_EQ(hint.fileId, 1);
 	ASSERT_EQ(hint.offset, 100);
+	ASSERT_EQ(hint.size, 10);
 
-	ASSERT_TRUE(index_0.get(omx::Key(2), hint));
+	ASSERT_TRUE(index->get(omx::Key(2), hint));
 	ASSERT_EQ(hint.fileId, 1);
 	ASSERT_EQ(hint.offset, 200);
+	ASSERT_EQ(hint.size, 20);
 
-	ASSERT_TRUE(index_0.get(omx::Key(3), hint));
+	ASSERT_TRUE(index->get(omx::Key(3), hint));
 	ASSERT_EQ(hint.fileId, 2);
 	ASSERT_EQ(hint.offset, 400);
+	ASSERT_EQ(hint.size, 40);
 
-	ASSERT_TRUE(index_0.get(omx::Key(4), hint));
+	ASSERT_TRUE(index->get(omx::Key(4), hint));
 	ASSERT_EQ(hint.fileId, 2);
 	ASSERT_EQ(hint.offset, 500);
-}
+	ASSERT_EQ(hint.size, 50);
 
-TEST(Index, DunpRestore) {
-	CLEAR_DIR(temp_dir);
-
-	omx::Index index_0;
-	omx::Index index_1;
-	omx::SearchHint hint;
-
-	index_0.insert(omx::Key(1), omx::SearchHint(1, 100));
-	index_0.insert(omx::Key(2), omx::SearchHint(1, 200));
-	index_0.insert(omx::Key(3), omx::SearchHint(1, 300));
-	index_0.insert(omx::Key(3), omx::SearchHint(2, 400));
-
-	{
-		std::ofstream file(temp_dir / "index.bin", std::ios::binary | std::ios::app);
-		index_0.dump(file);
-	}
-
-	{
-		std::ifstream file(temp_dir / "index.bin", std::ios::binary | std::ios::in);
-		index_1.load(file);
-	}
-
-	ASSERT_TRUE(index_1.get(omx::Key(1), hint));
-	ASSERT_EQ(hint.fileId, 1);
-	ASSERT_EQ(hint.offset, 100);
-
-	ASSERT_TRUE(index_1.get(omx::Key(2), hint));
-	ASSERT_EQ(hint.fileId, 1);
-	ASSERT_EQ(hint.offset, 200);
-
-	ASSERT_TRUE(index_1.get(omx::Key(3), hint));
-	ASSERT_EQ(hint.fileId, 2);
-	ASSERT_EQ(hint.offset, 400);
-
-	ASSERT_FALSE(index_1.get(omx::Key(4), hint));
+	ASSERT_FALSE(index->get(omx::Key(5), hint));
 	ASSERT_EQ(hint.fileId, 0);
 	ASSERT_EQ(hint.offset, 0);
+	ASSERT_EQ(hint.size, 0);
+}
+
+TEST(Index, DumpRestore) {
+	CLEAR_DIR(temp_dir);
+
+	auto index_1 = std::make_unique<omx::SSTableIndex>(1);
+	auto index_2 = std::make_unique<omx::SSTableIndex>(2);
+	auto index   = std::make_unique<omx::Index>();
+	omx::SearchHint hint;
+
+	index_1->insert(omx::Key(1), omx::FileSearchHint(100, 10));
+	index_1->insert(omx::Key(2), omx::FileSearchHint(200, 20));
+	index_1->insert(omx::Key(3), omx::FileSearchHint(300, 30));
+	index_2->insert(omx::Key(3), omx::FileSearchHint(400, 40));
+	index_2->insert(omx::Key(4), omx::FileSearchHint(500, 50));
+
+	{
+		std::ofstream file(temp_dir / "index_1.bin", std::ios::binary);
+		index_1->dump(file);
+	}
+
+	{
+		std::ofstream file(temp_dir / "index_2.bin", std::ios::binary);
+		index_2->dump(file);
+	}
+
+	index->load(temp_dir);
+
+	ASSERT_TRUE(index->get(omx::Key(1), hint));
+	ASSERT_EQ(hint.fileId, 1);
+	ASSERT_EQ(hint.offset, 100);
+	ASSERT_EQ(hint.size, 10);
+
+	ASSERT_TRUE(index->get(omx::Key(2), hint));
+	ASSERT_EQ(hint.fileId, 1);
+	ASSERT_EQ(hint.offset, 200);
+	ASSERT_EQ(hint.size, 20);
+
+	ASSERT_TRUE(index->get(omx::Key(3), hint));
+	ASSERT_EQ(hint.fileId, 2);
+	ASSERT_EQ(hint.offset, 400);
+	ASSERT_EQ(hint.size, 40);
+
+	ASSERT_TRUE(index->get(omx::Key(4), hint));
+	ASSERT_EQ(hint.fileId, 2);
+	ASSERT_EQ(hint.offset, 500);
+	ASSERT_EQ(hint.size, 50);
+
+	ASSERT_FALSE(index->get(omx::Key(5), hint));
+	ASSERT_EQ(hint.fileId, 0);
+	ASSERT_EQ(hint.offset, 0);
+	ASSERT_EQ(hint.size, 0);
 }
 
 TEST(SSTableIndex, ReadWrite) {
@@ -404,7 +429,7 @@ TEST(MemTable, Remove) {
 TEST(MemTable, Dump) {
 	omx::MemTable table;
 	omx::SSTableRowPtr entry;
-	omx::SearchHint hint;
+	omx::FileSearchHint hint;
 	std::string data;
 	std::string buffer;
 
@@ -415,7 +440,7 @@ TEST(MemTable, Dump) {
 
 	std::ostringstream os;
 
-	auto index = table.createIndex(0);
+	auto index = table.createSortedStringsTableIndex(0);
 
 	table.dump(os);
 

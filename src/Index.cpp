@@ -1,61 +1,94 @@
 #include "Index.h"
 
+#include <fstream>
+#include <set>
+
+namespace fs = std::filesystem;
+
 namespace omx {
 
+	SearchHint::SearchHint(uint32_t fileId_, uint32_t offset_, uint32_t size_)
+		: fileId(fileId_), offset(offset_), size(size_)
+	{}
+
 	void Index::insert(Key key, SearchHint hint) {
-		m_map.insert_or_assign(key, hint);
+		auto it = m_map.find(hint.fileId);
+
+		if (it == m_map.end()) {
+			auto tableIndex = std::make_unique<SSTableIndex>(hint.fileId);
+
+			tableIndex->insert(key, FileSearchHint(hint.offset, hint.size));
+
+			update(std::move(tableIndex), true);
+		} else {
+			auto& tableIndex = *it->second;
+
+			tableIndex->insert(key, FileSearchHint(hint.offset, hint.size));
+		}
 	}
 
-	void Index::merge(const Index& other) {
-		for (const auto& [key, hint]: other.m_map) {
-			m_map.insert_or_assign(key, hint);
+	void Index::update(SSTableIndexPtr tableIndex, bool trust) {
+		if (!trust) {
+			auto it = m_map.find(tableIndex->getFileId());
+			if (it != m_map.end()) {
+				throw std::runtime_error("file id is already indexed");
+			}
 		}
+
+		m_tableIndexes.push_front(std::move(tableIndex));
+
+		auto it = m_tableIndexes.begin();
+
+		m_map.insert({(*it)->getFileId(), it});
+	}
+
+	void Index::update(SSTableIndexPtr tableIndex) {
+		update(std::move(tableIndex), false);
 	}
 
 	bool Index::get(Key key, SearchHint& hint) const {
-		auto it = m_map.find(key);
+		auto fileHint = FileSearchHint{};
 
-		if (it == m_map.end()) {
-			hint = SearchHint();
-			return false;
+		for (const auto& tableIndex: m_tableIndexes) {
+			if (tableIndex->get(key, fileHint)) {
+				hint.fileId = tableIndex->getFileId();
+				hint.offset = fileHint.offset;
+				hint.size   = fileHint.size;
+
+				return true;
+			}
 		}
 
-		hint = it->second;
-
-		return true;
+		hint = SearchHint{};
+		return false;
 	}
 
-	void Index::dump(std::ostream& stream) {
-		constexpr size_t sizeOfKey = sizeof(Key::id);
-		constexpr size_t sizeOfHint = sizeof(SearchHint);
-
-		for (const auto& [key, hint]: m_map) {
-			stream.write(reinterpret_cast<const char*>(&sizeOfKey), sizeof(sizeOfKey));
-			stream.write(reinterpret_cast<const char*>(&key.id), sizeOfKey);
-			stream.write(reinterpret_cast<const char*>(&sizeOfHint), sizeof(sizeOfHint));
-			stream.write(reinterpret_cast<const char*>(&hint), sizeOfHint);
+	void Index::load(const std::filesystem::path& dir) {
+		if (!fs::exists(dir) || !fs::is_directory(dir)) {
+			throw std::runtime_error("invalid directory: " + dir.string());
 		}
 
-		stream.flush();
-	}
+		std::set<fs::path> sortedIndexFiles;
 
-	void Index::load(std::istream& stream) {
-		size_t sizeOfKey = 0;
-		size_t sizeOfHint = 0;
-		Key key;
-		SearchHint hint;
+		for (const fs::directory_entry& directoryEntry: fs::directory_iterator(dir)) {
+			if (!directoryEntry.is_regular_file()) {
+				continue;
+			}
 
-		while (!stream.eof()) {
-			stream.read(reinterpret_cast<char*>(&sizeOfKey), sizeof(sizeOfKey));
-			stream.read(reinterpret_cast<char*>(&key.id), sizeOfKey);
-			stream.read(reinterpret_cast<char*>(&sizeOfHint), sizeof(sizeOfHint));
-			stream.read(reinterpret_cast<char*>(&hint), sizeOfHint);
-			stream.peek();
-			m_map.insert({key, hint});
+			sortedIndexFiles.insert(directoryEntry.path());
+		}
+
+		for (const auto& path: sortedIndexFiles) {
+			auto stream = std::ifstream(path, std::ios::binary | std::ios::in);
+			if (!stream.is_open() || stream.bad()) {
+				throw std::runtime_error("bad stream: " + path.string());
+			}
+
+			auto indexTable = std::make_unique<SSTableIndex>();
+
+			indexTable->load(stream);
+
+			update(std::move(indexTable));
 		}
 	}
-
-	SearchHint::SearchHint(std::size_t fileId_, std::size_t offset_, std::size_t size_)
-		: fileId(fileId_), offset(offset_), size(size_)
-	{}
 }

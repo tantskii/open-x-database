@@ -1,7 +1,6 @@
 #include "MemTable.h"
 #include "SSTable.h"
 #include "Compression/ICompression.h"
-#include "Logging/Logging.h"
 
 namespace omx {
 
@@ -13,7 +12,6 @@ namespace omx {
 
 	void MemTable::put(Key key, const std::string& value, const UInt128& checksum, EntryType entryType) {
 		if (m_isImmutable) {
-			log::error("[%s] attempt to write to immutable memory table", __PRETTY_FUNCTION__);
 			throw std::runtime_error("attempt to write to immutable memory table");
 		}
 
@@ -41,7 +39,6 @@ namespace omx {
 
 	bool MemTable::get(Key key, std::string& value, UInt128& checksum) {
 		if (m_isImmutable) {
-			log::error("[%s] attempt to read from immutable memory table", __PRETTY_FUNCTION__);
 			throw std::runtime_error("attempt to read from immutable memory table");
 		}
 
@@ -100,7 +97,6 @@ namespace omx {
 
 	void MemTable::restoreFromLog(std::istream& stream) {
 		if (stream.bad()) {
-			log::error("[%s] bad input stream", __PRETTY_FUNCTION__);
 			throw std::runtime_error("bad input stream");
 		}
 
@@ -154,7 +150,6 @@ namespace omx {
 
 	void MemTable::makeImmutable() {
 		if (m_isImmutable) {
-			log::error("[%s] memory table is already immutable", __PRETTY_FUNCTION__);
 			throw std::runtime_error("memory table is already immutable");
 		}
 		m_isImmutable = true;

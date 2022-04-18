@@ -1,6 +1,5 @@
 #include "StorageEngine.h"
 #include "Compression/ICompression.h"
-#include "Logging/Logging.h"
 
 #include <fstream>
 #include <memory>
@@ -38,7 +37,6 @@ namespace omx {
 
 		if (findInMemory(key, compressed, checksum) || findOnDisk(key, compressed, checksum)) {
 			if (m_hasher->hash(compressed) != checksum) {
-				log::error("[%s] Data corrupted: invalid checksum", __PRETTY_FUNCTION__);
 				throw std::runtime_error("data corrupted: invalid checksum");
 			}
 
@@ -71,31 +69,15 @@ namespace omx {
 		m_index = std::make_unique<Index>();
 
 		if (fs::exists(m_walFileName)) {
-			log::info("[StorageEngine] Restoring memory table from %s", m_walFileName.c_str());
-
 			auto stream = std::ifstream(m_walFileName, std::ios::binary | std::ios::in);
 			m_memTable->restoreFromLog(stream);
 		}
 		m_memTable->setWriteAheadLog(m_walFileName);
 
 		if (fs::exists(m_indexFileName)) {
-			log::info("[StorageEngine] Restoring index from %s", m_indexFileName.c_str());
-
 			auto stream = std::ifstream(m_indexFileName, std::ios::binary | std::ios::in);
 			m_index->load(stream);
 		}
-
-		log::info("[StorageEngine] Opened Database with options:"
-			"\n\tmax memory table size  : %d bytes"
-			"\n\thashing algorithm      : %s"
-			"\n\tcompression algorithm  : %s"
-			"\n\troot directory         : %s"
-			"\n\tmemory table log file  : %s"
-			"\n\tindex log file         : %s"
-			"\n\toptions file           : %s",
-			m_opts.maxMemTableSize, toString(m_opts.hashType), toString(m_opts.compressionType),
-			m_dir.c_str(), m_walFileName.c_str(), m_indexFileName.c_str(), m_optionsFileName.c_str()
-		);
 	}
 
 	StorageEngine::StorageEngine(Options options) {
@@ -103,8 +85,6 @@ namespace omx {
 	}
 
 	void StorageEngine::saveOptions() const {
-		log::info("[StorageEngine] Saving options to %s", m_optionsFileName.c_str());
-
 		auto stream = std::ofstream(m_optionsFileName, std::ios::binary);
 		stream.write(reinterpret_cast<const char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
 		stream.write(reinterpret_cast<const char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
@@ -112,8 +92,6 @@ namespace omx {
 	}
 
 	void StorageEngine::loadOptions() {
-		log::info("[StorageEngine] Loading options from %s", m_optionsFileName.c_str());
-
 		auto stream = std::ifstream(m_optionsFileName, std::ios::binary);
 		stream.read(reinterpret_cast<char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
 		stream.read(reinterpret_cast<char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));

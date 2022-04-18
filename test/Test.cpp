@@ -5,6 +5,7 @@
 #include "../src/SSTable.h"
 #include "../src/SSTableRow.h"
 #include "../src/StorageEngine.h"
+#include "../src/SSTableIndex.h"
 
 #include <gtest/gtest.h>
 
@@ -198,6 +199,87 @@ TEST(Index, DunpRestore) {
 
 	ASSERT_FALSE(index_1.get(omx::Key(4), hint));
 	ASSERT_EQ(hint.fileId, 0);
+	ASSERT_EQ(hint.offset, 0);
+}
+
+TEST(SSTableIndex, ReadWrite) {
+	const uint32_t fileId = 1;
+	omx::SSTableIndex index(fileId);
+	omx::FileSearchHint hint;
+
+	index.insert(omx::Key(1), omx::FileSearchHint(100, 40));
+	index.insert(omx::Key(2), omx::FileSearchHint(200, 30));
+	index.insert(omx::Key(3), omx::FileSearchHint(300, 20));
+	index.insert(omx::Key(3), omx::FileSearchHint(400, 10));
+
+	ASSERT_EQ(index.getFileId(), fileId);
+
+	ASSERT_TRUE(index.get(omx::Key(1), hint));
+	ASSERT_EQ(hint.size, 40);
+	ASSERT_EQ(hint.offset, 100);
+
+	ASSERT_TRUE(index.get(omx::Key(2), hint));
+	ASSERT_EQ(hint.size, 30);
+	ASSERT_EQ(hint.offset, 200);
+
+	ASSERT_TRUE(index.get(omx::Key(3), hint));
+	ASSERT_EQ(hint.size, 10);
+	ASSERT_EQ(hint.offset, 400);
+
+	ASSERT_FALSE(index.get(omx::Key(4), hint));
+	ASSERT_EQ(hint.size, 0);
+	ASSERT_EQ(hint.offset, 0);
+}
+
+TEST(SSTableIndex, DumpRestore) {
+	CLEAR_DIR(temp_dir);
+
+	const uint32_t fileId = 123;
+	omx::SSTableIndex index_0(fileId);
+	omx::SSTableIndex index_1;
+	omx::FileSearchHint hint;
+
+	index_0.insert(omx::Key(1), omx::FileSearchHint(100, 40));
+	index_0.insert(omx::Key(2), omx::FileSearchHint(200, 30));
+	index_0.insert(omx::Key(3), omx::FileSearchHint(300, 20));
+	index_0.insert(omx::Key(3), omx::FileSearchHint(400, 10));
+
+	{
+		std::ofstream file(temp_dir / "index.bin", std::ios::binary | std::ios::app);
+		index_0.dump(file);
+	}
+
+	{
+		std::ofstream file(temp_dir / "dir/index.bin", std::ios::binary | std::ios::app);
+		ASSERT_THROW(index_0.dump(file), std::runtime_error);
+	}
+
+	{
+		std::ifstream file(temp_dir / "index.bin", std::ios::binary | std::ios::in);
+		index_1.load(file);
+	}
+
+	{
+		std::ifstream file(temp_dir / "index1.bin", std::ios::binary | std::ios::in);
+		ASSERT_THROW(index_1.load(file), std::runtime_error);
+	}
+
+	ASSERT_EQ(index_1.getFileId(), fileId);
+
+	ASSERT_TRUE(index_1.get(omx::Key(1), hint));
+	ASSERT_EQ(hint.size, 40);
+	ASSERT_EQ(hint.offset, 100);
+
+	ASSERT_TRUE(index_1.get(omx::Key(2), hint));
+	ASSERT_EQ(hint.size, 30);
+	ASSERT_EQ(hint.offset, 200);
+
+	ASSERT_TRUE(index_1.get(omx::Key(3), hint));
+	ASSERT_EQ(hint.size, 10);
+	ASSERT_EQ(hint.offset, 400);
+
+	ASSERT_FALSE(index_1.get(omx::Key(4), hint));
+	ASSERT_EQ(hint.size, 0);
 	ASSERT_EQ(hint.offset, 0);
 }
 

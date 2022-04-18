@@ -16,6 +16,7 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/Key.cpp
     ${OMX_SOURCE_DIR}/MemTable.cpp
     ${OMX_SOURCE_DIR}/SSTableRow.cpp
+    ${OMX_SOURCE_DIR}/SSTableIndex.cpp
     ${OMX_SOURCE_DIR}/Index.cpp
     ${OMX_SOURCE_DIR}/WriteAheadLog.cpp
     ${OMX_SOURCE_DIR}/StorageEngine.cpp
@@ -26,6 +27,7 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/MemTable.h
     ${OMX_SOURCE_DIR}/MemTableKey.h
     ${OMX_SOURCE_DIR}/SSTableRow.h
+    ${OMX_SOURCE_DIR}/SSTableIndex.h
     ${OMX_SOURCE_DIR}/Index.h
     ${OMX_SOURCE_DIR}/WriteAheadLog.h
     ${OMX_SOURCE_DIR}/StorageEngine.h

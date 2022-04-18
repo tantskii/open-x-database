@@ -13,11 +13,7 @@ namespace omx {
 
 	class StorageEngine {
 	public:
-		explicit StorageEngine(Options options = {});
-
-		~StorageEngine();
-
-		void open(std::string dir);
+		void open(std::string dir, Options options = {});
 
 		void put(Key key, const std::string& value);
 

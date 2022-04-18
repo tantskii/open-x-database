@@ -48,7 +48,8 @@ namespace omx {
 		return false;
 	}
 
-	void StorageEngine::open(std::string dir) {
+	void StorageEngine::open(std::string dir, Options options) {
+		m_opts = options;
 		m_dir = std::move(dir);
 		m_walFileName     = m_dir / "wal.bin";
 		m_indexFileName   = m_dir / "index.bin";
@@ -78,10 +79,6 @@ namespace omx {
 			auto stream = std::ifstream(m_indexFileName, std::ios::binary | std::ios::in);
 			m_index->load(stream);
 		}
-	}
-
-	StorageEngine::StorageEngine(Options options) {
-		m_opts = options;
 	}
 
 	void StorageEngine::saveOptions() const {
@@ -153,9 +150,5 @@ namespace omx {
 		checksum = row->getChecksum();
 
 		return true;
-	}
-
-	StorageEngine::~StorageEngine() {
-		makeSnapshot();
 	}
 }

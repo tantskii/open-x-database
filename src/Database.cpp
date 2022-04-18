@@ -12,12 +12,12 @@ namespace omx {
 		m_impl->remove(key);
 	}
 
-	void Database::get(Key key, std::string& value) {
-		m_impl->get(key, value);
+	bool Database::get(Key key, std::string& value) {
+		return m_impl->get(key, value);
 	}
 
-	void Database::open(const char* path) {
-		m_impl->open(path);
+	void Database::open(const char* path, Options options) {
+		m_impl->open(path, options);
 	}
 
 	Database::Database() = default;

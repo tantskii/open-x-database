@@ -2,41 +2,40 @@
 
 #include <omx/Key.h>
 
+#include "SSTableIndex.h"
+
 #include <unordered_map>
-#include <shared_mutex>
-#include <mutex>
-#include <iostream>
+#include <unordered_set>
+#include <list>
+#include <memory>
+#include <filesystem>
 
 namespace omx {
 
 	struct SearchHint {
-		explicit SearchHint(std::size_t fileId = 0, std::size_t offset = 0, std::size_t size = 0);
+		explicit SearchHint(uint32_t fileId = 0, uint32_t offset = 0, uint32_t size = 0);
 
-		std::size_t fileId;
-		std::size_t offset;
-		std::size_t size;
+		uint32_t fileId;
+		uint32_t offset;
+		uint32_t size;
 	};
 
 	class Index {
 	public:
-
-		struct Hasher {
-			std::size_t operator()(const Key& key) const;
-		};
-
 		void insert(Key key, SearchHint hint);
 
-		void merge(const Index& other);
+		void update(SSTableIndexPtr tableIndex);
 
 		bool get(Key key, SearchHint& hint) const;
 
-		void dump(std::ostream& stream);
-
-		void load(std::istream& stream);
+		void load(const std::filesystem::path& dir);
 
 	private:
-		mutable std::shared_mutex m_mutex;
-		std::unordered_map<Key, SearchHint, Hasher> m_map;
+		void update(SSTableIndexPtr tableIndex, bool trust);
+
+		std::list<SSTableIndexPtr> m_tableIndexes;
+		std::unordered_map<uint32_t, std::list<SSTableIndexPtr>::const_iterator> m_map;
 	};
 
+	using IndexPtr = std::unique_ptr<Index>;
 }

@@ -17,4 +17,6 @@ namespace omx {
 
 	ICompressionPtr createCompressor(CompressionType compressionType);
 
+	const char* toString(CompressionType compressionType);
+
 }

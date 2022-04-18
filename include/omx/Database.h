@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Key.h"
+#include "Options.h"
 
 #include "internal/FastPimpl.h"
 #include "internal/Export.h"
@@ -25,7 +26,7 @@ namespace omx {
 		 * @param path [in] path to database
 		 * @param options [in] input options @see Options
 		 */
-		void open(const char* path);
+		void open(const char* path, Options options = {});
 
 		/**
 		 * @brief Set the database entry for "key" to "value".
@@ -48,7 +49,7 @@ namespace omx {
 		 * @param value [out] value @see Bytes
 		 * @throws std::runtime_error on error
 		 */
-		void get(Key key, std::string& value);
+		bool get(Key key, std::string& value);
 
 	private:
 		static constexpr std::size_t kImplSize = 320;

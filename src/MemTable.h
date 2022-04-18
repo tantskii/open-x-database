@@ -14,6 +14,7 @@
 #include <shared_mutex>
 #include <mutex>
 #include <ostream>
+#include <atomic>
 
 namespace omx {
 
@@ -24,41 +25,43 @@ namespace omx {
 
 		void put(Key key, const std::string& value);
 
+		void put(Key key, const std::string& value, const UInt128& checksum);
+
 		void remove(Key key);
 
 		bool get(Key key, std::string& value);
+		bool get(Key key, std::string& value, UInt128& checksum);
 
-		void dump(size_t fileId, std::ostream& os, Index& index);
+		void dump(std::ostream& os);
 
 		void setWriteAheadLog(const std::string& path);
 
-		void setCompression(ICompressionPtr compressor);
-
-		void setHasher(IHasherPtr hasher);
-
 		void restoreFromLog(std::istream& stream);
 
-		size_t getApproximateSize() const;
+		[[nodiscard]] size_t getApproximateSize() const;
 
-		SSTable createSortedStringsTable() const;
+		[[nodiscard]] SSTable createSortedStringsTable() const;
 
-		Index&& createIndex(size_t fileId) const;
+		[[nodiscard]] SSTableIndexPtr createSortedStringsTableIndex(size_t fileId) const;
+
+		void makeImmutable();
 
 	private:
+
+		void put(Key key, const std::string& value, const UInt128& checksum, EntryType entryType);
 
 		void log(SSTableRowPtr row);
 
 		std::map<InsertKey<Key>, SSTableRowPtr, std::less<>> m_map;
-		mutable std::shared_mutex m_mutex;
 		size_t m_counter = 0;
-		size_t m_memorySize = 0;
+		std::atomic<size_t> m_memorySize = 0;
 
-		bool m_isImmutable = false;
+		std::atomic<bool> m_isImmutable = false;
 
 		WriteAheadLogPtr m_wal;
-		ICompressionPtr m_compressor;
-		IHasherPtr m_hasher;
 	};
+
+	using MemTablePtr = std::unique_ptr<MemTable>;
 }
 
 

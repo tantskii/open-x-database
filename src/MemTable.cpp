@@ -10,67 +10,62 @@ namespace omx {
 		}
 	}
 
-	void MemTable::put(Key key, const std::string& value) {
-		std::unique_lock lock(m_mutex);
-
+	void MemTable::put(Key key, const std::string& value, const UInt128& checksum, EntryType entryType) {
 		if (m_isImmutable) {
-			return;
+			throw std::runtime_error("attempt to write to immutable memory table");
 		}
 
 		auto insertKey = InsertKey<Key>(m_counter++, key);
-		auto row = std::make_shared<SSTableRow>(key, value);
+
+		auto row = std::make_shared<SSTableRow>(key, value, entryType, checksum);
+
 		m_memorySize += row->getRowSize();
 
 		log(row);
 		m_map.insert({insertKey, std::move(row)});
+	}
+
+	void MemTable::put(Key key, const std::string& value, const UInt128& checksum) {
+		put(key, value, checksum, EntryType::Put);
+	}
+
+	void MemTable::put(Key key, const std::string& value) {
+		put(key, value, UInt128{});
 	}
 
 	void MemTable::remove(Key key) {
-		std::unique_lock lock(m_mutex);
-
-		if (m_isImmutable) {
-			return;
-		}
-
-		auto insertKey = InsertKey<Key>(m_counter++, key);
-		auto row = std::make_shared<SSTableRow>(key);
-		m_memorySize += row->getRowSize();
-
-		log(row);
-		m_map.insert({insertKey, std::move(row)});
+		put(key, "", UInt128{}, EntryType::Remove);
 	}
 
-	bool MemTable::get(Key key, std::string& value) {
-		std::shared_lock lock(m_mutex);
-
+	bool MemTable::get(Key key, std::string& value, UInt128& checksum) {
 		if (m_isImmutable) {
-			return false;
+			throw std::runtime_error("attempt to read from immutable memory table");
 		}
 
-		auto searchKey = SearchKey<Key>(key);
-
-		auto it = m_map.find(searchKey);
+		auto it = m_map.find(SearchKey(key));
 
 		if (it == m_map.end()) {
 			return false;
 		}
 
-		const auto& row = it->second;
+		auto row = it->second;
 
 		if (row->getOperationType() == EntryType::Remove) {
 			return false;
 		}
 
 		value = row->getData();
+		checksum = row->getChecksum();
 
 		return true;
 	}
 
-	void MemTable::dump(size_t fileId, std::ostream& os, Index& index) {
-		std::unique_lock lock(m_mutex);
+	bool MemTable::get(Key key, std::string& value) {
+		UInt128 _;
+		return get(key, value, _);
+	}
 
-		m_isImmutable = true;
-
+	void MemTable::dump(std::ostream& os) {
 		size_t offset = 0;
 		size_t size = 0;
 
@@ -84,19 +79,11 @@ namespace omx {
 			}
 			prevKeyId = keyId;
 
-			std::string uncompressed = serialize(row);
-			std::string compressed;
-			m_compressor->compress(uncompressed, compressed);
+			auto data = serialize(row);
 
-			os.write(compressed.data(), compressed.size());
+			os.write(data.data(), data.size());
 
-			UInt128 checksum = m_hasher->hash(compressed);
-
-			os.write(reinterpret_cast<const char*>(&checksum.first), sizeof(checksum));
-
-			size = compressed.size() + sizeof(checksum);
-
-			index.insert(insertKey.key, SearchHint(fileId, offset, size));
+			size = data.size();
 
 			offset += size;
 		}
@@ -105,33 +92,31 @@ namespace omx {
 	}
 
 	void MemTable::setWriteAheadLog(const std::string& path) {
-		std::unique_lock lock(m_mutex);
 		m_wal = std::make_unique<WriteAheadLog>(path);
 	}
 
 	void MemTable::restoreFromLog(std::istream& stream) {
-		std::unique_lock lock(m_mutex);
+		if (stream.bad()) {
+			throw std::runtime_error("bad input stream");
+		}
 
 		while (!stream.eof()) {
 			auto row = deserialize(stream);
 
-			auto key = row->getKey();
-			auto insertKey = InsertKey<Key>(m_counter++, key);
-			m_map.insert({insertKey, std::move(row)});
+			auto key = InsertKey<Key>(m_counter++, row->getKey());
+
+			m_map.insert({key, std::move(row)});
 
 			stream.peek();
 		}
 	}
 
 	size_t MemTable::getApproximateSize() const {
-		std::shared_lock lock(m_mutex);
 		return m_memorySize;
 	}
 
 	SSTable MemTable::createSortedStringsTable() const {
-		std::shared_lock lock(m_mutex);
-
-		SSTable table;
+		auto table = SSTable();
 
 		for (const auto& [_, row]: m_map) {
 			table.append(row);
@@ -140,10 +125,9 @@ namespace omx {
 		return table;
 	}
 
-	Index&& MemTable::createIndex(const size_t fileId) const {
-		std::shared_lock lock(m_mutex);
+	SSTableIndexPtr MemTable::createSortedStringsTableIndex(size_t fileId) const {
+		auto index = std::make_unique<SSTableIndex>(fileId);
 
-		Index index;
 		size_t offset = 0;
 		size_t size = 0;
 		size_t prevKeyId = std::string::npos;
@@ -157,25 +141,19 @@ namespace omx {
 			prevKeyId = keyId;
 
 			size = row->getRowSize();
-			index.insert(insertKey.key, SearchHint(fileId, offset, size));
+			index->insert(insertKey.key, FileSearchHint(offset, size));
 			offset += size;
 		}
 
-		return std::move(index);
+		return index;
 	}
 
-	void MemTable::setCompression(ICompressionPtr compressor) {
-		std::unique_lock lock(m_mutex);
-		m_compressor = std::move(compressor);
+	void MemTable::makeImmutable() {
+		if (m_isImmutable) {
+			throw std::runtime_error("memory table is already immutable");
+		}
+		m_isImmutable = true;
 	}
 
-	MemTable::MemTable() {
-		m_compressor = createCompressor(CompressionType::NoCompression);
-		m_hasher = createHasher(HashType::NoHash);
-	}
-
-	void MemTable::setHasher(IHasherPtr hasher) {
-		std::unique_lock lock(m_mutex);
-		m_hasher = std::move(hasher);
-	}
+	MemTable::MemTable() = default;
 }

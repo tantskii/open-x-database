@@ -17,4 +17,8 @@ namespace omx {
 		uint64_t id = 0;
 	};
 
+	struct OMXDB_EXPORT KeyHasher {
+		std::size_t operator()(const Key& key) const;
+	};
+
 }

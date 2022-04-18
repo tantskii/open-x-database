@@ -1,4 +1,7 @@
 
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost 1.77.0 COMPONENTS system thread REQUIRED)
+
 set(OMX_HEADERS_DIR ${OMX_INCLUDE_DIR}/omx)
 set(OMX_PUBLIC_HEADERS
     ${OMX_HEADERS_DIR}/Database.h
@@ -13,19 +16,23 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/Key.cpp
     ${OMX_SOURCE_DIR}/MemTable.cpp
     ${OMX_SOURCE_DIR}/SSTableRow.cpp
+    ${OMX_SOURCE_DIR}/SSTableIndex.cpp
     ${OMX_SOURCE_DIR}/Index.cpp
     ${OMX_SOURCE_DIR}/WriteAheadLog.cpp
     ${OMX_SOURCE_DIR}/StorageEngine.cpp
     ${OMX_SOURCE_DIR}/SSTable.cpp
+    ${OMX_SOURCE_DIR}/File.cpp
 )
 set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/MemTable.h
     ${OMX_SOURCE_DIR}/MemTableKey.h
     ${OMX_SOURCE_DIR}/SSTableRow.h
+    ${OMX_SOURCE_DIR}/SSTableIndex.h
     ${OMX_SOURCE_DIR}/Index.h
     ${OMX_SOURCE_DIR}/WriteAheadLog.h
     ${OMX_SOURCE_DIR}/StorageEngine.h
     ${OMX_SOURCE_DIR}/SSTable.h
+    ${OMX_SOURCE_DIR}/File.h
 )
 
 find_package(Threads REQUIRED)
@@ -46,12 +53,14 @@ macro(build_omxdb_lib lib_name lib_type)
     target_include_directories(${lib_name}
         PUBLIC
             ${OMX_INCLUDE_DIR}
+            ${Boost_INCLUDE_DIR}
     )
 
     target_link_libraries(${lib_name}
         PUBLIC
             omxdb_compression
             omxdb_hashing
+            ${BOOST_LIBRARIES} Boost::system
     )
 
     set_target_properties(${lib_name}

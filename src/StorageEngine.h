@@ -44,6 +44,7 @@ namespace omx {
 		std::filesystem::path m_dir;
 		std::string m_walFileName;
 		std::filesystem::path m_indexDir;
+		std::filesystem::path m_chunkDir;
 		std::string m_optionsFileName;
 		Options m_opts;
 

@@ -52,7 +52,8 @@ namespace omx {
 		m_opts = options;
 		m_dir = std::move(dir);
 		m_walFileName     = m_dir / "wal.bin";
-		m_indexDir        = m_dir / "dir";
+		m_indexDir        = m_dir / "index";
+		m_chunkDir        = m_dir / "segment";
 		m_optionsFileName = m_dir / "options.bin";
 
 		if (fs::exists(m_optionsFileName)) {
@@ -74,6 +75,10 @@ namespace omx {
 			m_memTable->restoreFromLog(stream);
 		}
 		m_memTable->setWriteAheadLog(m_walFileName);
+
+		if (!fs::exists(m_chunkDir)) {
+			fs::create_directory(m_chunkDir);
+		}
 
 		if (!fs::exists(m_indexDir)) {
 			fs::create_directory(m_indexDir);
@@ -105,7 +110,7 @@ namespace omx {
 
 	void StorageEngine::makeSnapshot() {
 		const auto segment       = m_segmentId++;
-		const auto chunkFileName = m_dir / ("segment_" + std::to_string(segment) + ".bin");
+		const auto chunkFileName = m_chunkDir / ("segment_" + std::to_string(segment) + ".bin");
 		const auto indexFileName = m_indexDir / ("index_" + std::to_string(segment) + ".bin");
 
 		auto memTableStream = std::ofstream(chunkFileName, std::ios::binary);
@@ -137,7 +142,7 @@ namespace omx {
 		}
 
 		auto chunkName = "segment_" + std::to_string(hint.fileId) + ".bin";
-		auto stream = std::ifstream(m_dir / chunkName, std::ios::binary);
+		auto stream = std::ifstream(m_chunkDir / chunkName, std::ios::binary);
 
 		std::string data;
 		data.resize(hint.size);

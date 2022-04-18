@@ -28,9 +28,9 @@ namespace omx {
 			throw std::runtime_error("invalid output stream");
 		}
 
-		constexpr size_t sizeOfFileId = sizeof(m_fileId);
-		constexpr size_t sizeOfKey = sizeof(Key::id);
-		constexpr size_t sizeOfHint = sizeof(FileSearchHint);
+		constexpr uint8_t sizeOfFileId = sizeof(m_fileId);
+		constexpr uint8_t sizeOfKey    = sizeof(Key::id);
+		constexpr uint8_t sizeOfHint   = sizeof(FileSearchHint);
 
 		stream.write(reinterpret_cast<const char*>(&sizeOfFileId), sizeof(sizeOfFileId));
 		stream.write(reinterpret_cast<const char*>(&m_fileId), sizeOfFileId);
@@ -50,9 +50,9 @@ namespace omx {
 			throw std::runtime_error("invalid input stream");
 		}
 
-		size_t sizeOfFileId = 0;
-		size_t sizeOfKey    = 0;
-		size_t sizeOfHint   = 0;
+		uint8_t sizeOfFileId = 0;
+		uint8_t sizeOfKey    = 0;
+		uint8_t sizeOfHint   = 0;
 
 		auto key  = Key{};
 		auto hint = FileSearchHint{};

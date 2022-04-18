@@ -35,18 +35,18 @@ namespace omx {
 	}
 
 	std::size_t SSTableRow::getRowSize() const {
-		const size_t keyLength = sizeof(m_key.id);
-		const size_t numBytes = m_value.size();
-		const size_t checksumLength = sizeof(m_checksum);
+		const uint8_t sizeOfKey      = sizeof(m_key.id);
+		const size_t numBytes        = m_value.size();
+		const uint8_t sizeOfChecksum = sizeof(m_checksum);
 		size_t totalBytes = 0;
 
 		totalBytes += sizeof(m_entryType);
-		totalBytes += sizeof(keyLength);
-		totalBytes += keyLength;
+		totalBytes += sizeof(sizeOfKey);
+		totalBytes += sizeOfKey;
 		totalBytes += sizeof(numBytes);
 		totalBytes += numBytes;
-		totalBytes += sizeof(checksumLength);
-		totalBytes += checksumLength;
+		totalBytes += sizeof(sizeOfChecksum);
+		totalBytes += sizeOfChecksum;
 
 		return totalBytes;
 	}
@@ -59,19 +59,19 @@ namespace omx {
 		std::ostringstream stream;
 		const Key key = row->getKey();
 		const std::string& value = row->getData();
-		const size_t keyLength = sizeof(key.id);
+		const uint8_t sizeOfKey = sizeof(key.id);
 		const size_t numBytes = value.size();
 		auto op = static_cast<uint8_t>(row->getOperationType());
 		const auto checksum = row->getChecksum();
-		const size_t checksumLength = sizeof(checksum);
+		const uint8_t sizeOfChecksum = sizeof(checksum);
 
 		stream.write(reinterpret_cast<const char*>(&op), sizeof(op));
-		stream.write(reinterpret_cast<const char*>(&keyLength), sizeof(keyLength));
-		stream.write(reinterpret_cast<const char*>(&key.id), keyLength);
+		stream.write(reinterpret_cast<const char*>(&sizeOfKey), sizeof(sizeOfKey));
+		stream.write(reinterpret_cast<const char*>(&key.id), sizeOfKey);
 		stream.write(reinterpret_cast<const char*>(&numBytes), sizeof(numBytes));
 		stream.write(value.data(), numBytes);
-		stream.write(reinterpret_cast<const char*>(&checksumLength), sizeof(checksumLength));
-		stream.write(reinterpret_cast<const char*>(&checksum.first), checksumLength);
+		stream.write(reinterpret_cast<const char*>(&sizeOfChecksum), sizeof(sizeOfChecksum));
+		stream.write(reinterpret_cast<const char*>(&checksum.first), sizeOfChecksum);
 
 		return stream.str();
 	}
@@ -82,23 +82,23 @@ namespace omx {
 	}
 
 	SSTableRowPtr deserialize(std::istream& stream) {
-		size_t keyLength = 0;
+		uint8_t sizeOfKey = 0;
 		size_t numBytes = 0;
-		size_t checksumLength = 0;
+		uint8_t sizeOfChecksum = 0;
 		EntryType entryType;
 		Key key;
 		std::string value;
 		UInt128 checksum;
 
 		stream.read(reinterpret_cast<char*>(&entryType), sizeof(entryType));
-		stream.read(reinterpret_cast<char*>(&keyLength), sizeof(keyLength));
-		stream.read(reinterpret_cast<char*>(&key.id), keyLength);
+		stream.read(reinterpret_cast<char*>(&sizeOfKey), sizeof(sizeOfKey));
+		stream.read(reinterpret_cast<char*>(&key.id), sizeOfKey);
 		stream.read(reinterpret_cast<char*>(&numBytes), sizeof(size_t));
 
 		value.resize(numBytes);
 		stream.read(value.data(), numBytes);
-		stream.read(reinterpret_cast<char*>(&checksumLength), sizeof(checksumLength));
-		stream.read(reinterpret_cast<char*>(&checksum.first), checksumLength);
+		stream.read(reinterpret_cast<char*>(&sizeOfChecksum), sizeof(sizeOfChecksum));
+		stream.read(reinterpret_cast<char*>(&checksum.first), sizeOfChecksum);
 
 		return std::make_shared<SSTableRow>(key, value, entryType, checksum);
 	}

@@ -11,7 +11,7 @@ mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_COMPILER=/usr/bin/clang-13 \
   -DCMAKE_CXX_COMPILER=/usr/bin/clang++-13 \
-  -DOMXDB_ROOT=/home/tikhon/libs/omxdb_v1_0_0
+  -DOMXDB_ROOT=/home/tikhon/libs/omxdb
   
 cmake --build . --config Release
   

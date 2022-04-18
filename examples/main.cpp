@@ -1,75 +1,57 @@
+#include <iostream>
+#include <memory>
+#include <cassert>
+
 #include <omx/Database.h>
 
-#include <iostream>
-
 int main() {
-	// define directory were database will store elements
-	std::string temp_dir = "/tmp/db";
+	// set root database directory
+	std::string root = "/tmp/db";
 
-	// set options for database
 	omx::Options options;
-	// set max chunk size to 1 GB
-	options.setMaxFileSize(1 * 1024 * 1024 * 1024);
-	// set max number of opened files to 100
-	options.setMaxOpenFiles(100);
-	// set size of buffer that will keep data before dump to the disk to 1 GB
-	options.setWriteBufferSize(1 * 1024 * 1024 * 1024);
+	// set max memory table size to 1kb
+	options.maxMemTableSize = 1 * 1024 * 1024;
+	// set hashing algorithm for calculating checksums
+	options.hashType = omx::HashType::CityHash128;
+	// set compression algorithm for optimize space capacity
+	options.compressionType = omx::CompressionType::Snappy;
 
 	// create database object
-	omx::BinaryStorage database;
-	database.open(temp_dir.c_str());
+	// note: it is recommended to wrap omx::Database into smart pointer
+	auto database = std::make_shared<omx::Database>();
 
-	// create key
+	// open database in root directory
+	database->open(root.c_str(), options);
+
+	// create key with id == 1234
 	omx::Key key(1234);
+	// create string value
+	std::string input = "test read write string";
 
-	// prepare string for writing into database
-	std::string str = "Hello, world!";
-	omx::Bytes input;
-	input.from(str);
+	// store key and value in database
+	database->put(key, input);
 
-	// write data
-	database.put(key, input);
+	// create string object to store output value
+	std::string output;
 
-	// read it
-	omx::Bytes output;
-	database.get(key, output);
+	// read value by passed key
+	bool status = database->get(key, output);
 
-	// assert that we read exact the same string that we wrote
-	std::cout << "input : " << input.toString() << std::endl;
-	std::cout << "output: " << output.toString() << std::endl;
+	// assert that value was found by passed key
+	assert(status);
 
-	// remove string
-	database.remove(key);
+	// print input and output values
+	std::cout << "Input  value: " << input << std::endl;
+	std::cout << "Output value: " << output << std::endl;
 
-	// Make write transaction
-	omx::Transaction transaction;
+	// lets remove value
+	database->remove(key);
 
-	// before transaction executing lets put input back
-	database.put(key, input);
+	// try to read removed value by passed key
+	status = database->get(key, output);
 
-	std::string str0 = "Zero";
-	omx::Key key0(0);
-	omx::Bytes input0;
-	input0.from(str0);
-
-	std::string str1 = "One";
-	omx::Key key1(1);
-	omx::Bytes input1;
-	input1.from(str1);
-
-	transaction.put(key0, input0);
-	transaction.remove(key);
-	transaction.put(key1, input1);
-	database.execute(transaction);
-
-	// read data
-	omx::Bytes output0;
-	omx::Bytes output1;
-	database.get(key0, output0);
-	database.get(key1, output1);
-
-	std::cout << "key: " << key0.id << " value: " << output0.toString() << std::endl;
-	std::cout << "key: " << key1.id << " value: " << output1.toString() << std::endl;
+	// assert that value was NOT found by passed key
+	assert(!status);
 
 	return 0;
 }

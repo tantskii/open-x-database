@@ -26,7 +26,7 @@ namespace omx {
 			case CompressionType::Snappy:
 				return "Snappy";
 			case CompressionType::LZ4:
-				return "LZ$";
+				return "LZ4";
 			default:
 				return "Unknown";
 		}

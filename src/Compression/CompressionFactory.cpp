@@ -2,6 +2,7 @@
 
 #include "NoCompression.h"
 #include "SnappyCompressionAdapter.h"
+#include "LZ4CompressionAdapter.h"
 
 namespace omx {
 
@@ -11,6 +12,8 @@ namespace omx {
 				return std::make_shared<NoCompression>();
 			case CompressionType::Snappy:
 				return std::make_shared<SnappyCompressionAdapter>();
+			case CompressionType::LZ4:
+				return std::make_shared<LZ4CompressionAdapter>();
 			default:
 				return std::make_shared<NoCompression>();
 		}
@@ -22,6 +25,8 @@ namespace omx {
 				return "NoCompression";
 			case CompressionType::Snappy:
 				return "Snappy";
+			case CompressionType::LZ4:
+				return "LZ$";
 			default:
 				return "Unknown";
 		}

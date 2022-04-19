@@ -7,3 +7,6 @@
 [submodule "extern/googletest"]
 	path = extern/googletest
 	url = git@github.com:google/googletest.git
+[submodule "extern/lz4"]
+	path = extern/lz4
+	url = git@github.com:lz4/lz4.git

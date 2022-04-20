@@ -17,7 +17,7 @@ namespace omx {
 
 		void dump(std::ostream& stream);
 
-		const std::vector<SSTableRowPtr>& getRowList();
+		const std::vector<SSTableRowPtr>& getRowList() const;
 
 	private:
 		std::vector<SSTableRowPtr> m_rows;

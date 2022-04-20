@@ -33,6 +33,7 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/StorageEngine.h
     ${OMX_SOURCE_DIR}/SSTable.h
     ${OMX_SOURCE_DIR}/File.h
+    ${OMX_SOURCE_DIR}/BloomFilter.h
 )
 
 find_package(Threads REQUIRED)

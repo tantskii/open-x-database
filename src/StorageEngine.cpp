@@ -55,6 +55,7 @@ namespace omx {
 		m_indexDir        = m_dir / "index";
 		m_chunkDir        = m_dir / "segment";
 		m_optionsFileName = m_dir / "options.bin";
+		m_bloomFileName   = m_dir / "bloom_filter.bin";
 
 		if (fs::exists(m_optionsFileName)) {
 			loadOptions();
@@ -87,6 +88,11 @@ namespace omx {
 		if (!fs::is_empty(m_indexDir)) {
 			m_index->load(m_indexDir);
 		}
+
+		if (fs::exists(m_bloomFileName)) {
+			auto stream = std::ifstream(m_bloomFileName, std::ios::binary | std::ios::in);
+			m_bloomFilter.load(stream);
+		}
 	}
 
 	void StorageEngine::saveOptions() const {
@@ -115,6 +121,13 @@ namespace omx {
 
 		auto memTableStream = std::ofstream(chunkFileName, std::ios::binary);
 		auto indexStream    = std::ofstream(indexFileName, std::ios::binary);
+		auto bloomStream    = std::ofstream(m_bloomFileName, std::ios::binary);
+
+		const auto table = m_memTable->createSortedStringsTable();
+		for (const auto& row: table.getRowList()) {
+			m_bloomFilter.add(row->getKey());
+		}
+		m_bloomFilter.dump(bloomStream);
 
 		auto tableIndex = m_memTable->createSortedStringsTableIndex(segment);
 
@@ -133,6 +146,10 @@ namespace omx {
 	}
 
 	bool StorageEngine::findOnDisk(Key key, std::string& value, UInt128& checksum) const {
+		if (!m_bloomFilter.probablyContains(key)) {
+			return false;
+		}
+
 		SearchHint hint;
 		{
 			auto lock = std::shared_lock(m_mutex);

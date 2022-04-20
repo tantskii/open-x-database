@@ -3,11 +3,15 @@
 #include <omx/Options.h>
 
 #include "MemTable.h"
+#include "BloomFilter.h"
 
 #include <atomic>
 #include <filesystem>
 #include <shared_mutex>
 #include <mutex>
+
+constexpr uint64_t kFilterSize = 10'000'000;
+constexpr uint8_t kNumHashes = 7;
 
 namespace omx {
 
@@ -45,8 +49,11 @@ namespace omx {
 		std::string m_walFileName;
 		std::filesystem::path m_indexDir;
 		std::filesystem::path m_chunkDir;
+		std::filesystem::path m_bloomFileName;
 		std::string m_optionsFileName;
 		Options m_opts;
+
+		BloomFilter<kFilterSize, kNumHashes> m_bloomFilter;
 
 		mutable std::shared_mutex m_mutex;
 	};

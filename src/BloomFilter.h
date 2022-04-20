@@ -78,6 +78,7 @@ namespace omx {
 		}
 
 		stream.write(reinterpret_cast<const char*>(m_bits.data()), FilterSize);
+		stream.flush();
 	}
 
 	template<uint64_t FilterSize, uint8_t NumHashes>
@@ -87,6 +88,7 @@ namespace omx {
 		}
 
 		stream.read(reinterpret_cast<char*>(m_bits.data()), FilterSize);
+		stream.peek();
 	}
 
 }

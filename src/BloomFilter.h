@@ -3,7 +3,7 @@
 #include <omx/Key.h>
 
 #include "Hasher/IHasher.h"
-#include "Hasher/CityHash/City.h"
+#include <City.h>
 
 #include <vector>
 

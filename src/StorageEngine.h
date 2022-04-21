@@ -27,8 +27,6 @@ namespace omx {
 
 	private:
 
-		void resetMemTable();
-
 		void makeSnapshot();
 
 		bool findInMemory(Key key, std::string& value, UInt128& checksum) const;

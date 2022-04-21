@@ -34,7 +34,7 @@ namespace omx {
 
 		void dump(std::ostream& os);
 
-		void setWriteAheadLog(const std::string& path);
+		void setWriteAheadLog(const std::string& path, uint32_t bufferSize = 512);
 
 		void restoreFromLog(std::istream& stream);
 
@@ -44,7 +44,7 @@ namespace omx {
 
 		[[nodiscard]] SSTableIndexPtr createSortedStringsTableIndex(size_t fileId) const;
 
-		void makeImmutable();
+		void clear();
 
 	private:
 
@@ -55,9 +55,7 @@ namespace omx {
 		std::map<InsertKey<Key>, SSTableRowPtr, std::less<>> m_map;
 
 		size_t m_counter = 0;
-		std::atomic<size_t> m_memorySize = 0;
-
-		std::atomic<bool> m_isImmutable = false;
+		size_t m_memorySize = 0;
 
 		WriteAheadLogPtr m_wal;
 	};

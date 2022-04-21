@@ -18,6 +18,8 @@ namespace omx {
 
 		uint64_t maxMemTableSize = 1 * 1024 * 1024; // 1mb
 
+		uint32_t maxWalBufferSize = 1 * 1024; // 1kb
+
 		CompressionType compressionType = CompressionType::LZ4;
 
 		HashType hashType = HashType::CityHash128;

@@ -9,12 +9,15 @@ int main() {
 	std::string root = "/tmp/db";
 
 	omx::Options options;
-	// set max memory table size to 1kb
+	// set max memory table size to 1mb
 	options.maxMemTableSize = 1 * 1024 * 1024;
+	// set write ahead log buffer size 1kb;
+	// note: this amount of data will be lost in case of server fault
+	options.maxWalBufferSize = 1 * 1024;
 	// set hashing algorithm for calculating checksums
 	options.hashType = omx::HashType::CityHash128;
 	// set compression algorithm for optimize space capacity
-	options.compressionType = omx::CompressionType::Snappy;
+	options.compressionType = omx::CompressionType::LZ4;
 
 	// create database object
 	// note: it is recommended to wrap omx::Database into smart pointer

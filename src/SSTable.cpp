@@ -51,7 +51,7 @@ namespace omx {
 		stream.flush();
 	}
 
-	const std::vector<SSTableRowPtr>& SSTable::getRowList() {
+	const std::vector<SSTableRowPtr>& SSTable::getRowList() const {
 		return m_rows;
 	}
 }

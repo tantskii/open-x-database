@@ -55,6 +55,7 @@ namespace omx {
 		m_indexDir        = m_dir / "index";
 		m_chunkDir        = m_dir / "segment";
 		m_optionsFileName = m_dir / "options.bin";
+		m_bloomFileName   = m_dir / "bloom_filter.bin";
 
 		if (fs::exists(m_optionsFileName)) {
 			loadOptions();
@@ -74,7 +75,7 @@ namespace omx {
 			auto stream = std::ifstream(m_walFileName, std::ios::binary | std::ios::in);
 			m_memTable->restoreFromLog(stream);
 		}
-		m_memTable->setWriteAheadLog(m_walFileName);
+		m_memTable->setWriteAheadLog(m_walFileName, m_opts.maxWalBufferSize);
 
 		if (!fs::exists(m_chunkDir)) {
 			fs::create_directory(m_chunkDir);
@@ -87,25 +88,29 @@ namespace omx {
 		if (!fs::is_empty(m_indexDir)) {
 			m_index->load(m_indexDir);
 		}
+
+		if (fs::exists(m_bloomFileName)) {
+			auto stream = std::ifstream(m_bloomFileName, std::ios::binary | std::ios::in);
+			m_bloomFilter.load(stream);
+		}
 	}
 
 	void StorageEngine::saveOptions() const {
 		auto stream = std::ofstream(m_optionsFileName, std::ios::binary);
 		stream.write(reinterpret_cast<const char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
+		stream.write(reinterpret_cast<const char*>(&m_opts.maxWalBufferSize), sizeof(m_opts.maxWalBufferSize));
 		stream.write(reinterpret_cast<const char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
+		stream.write(reinterpret_cast<const char*>(&m_opts.hashType), sizeof(m_opts.hashType));
 		stream.flush();
 	}
 
 	void StorageEngine::loadOptions() {
 		auto stream = std::ifstream(m_optionsFileName, std::ios::binary);
 		stream.read(reinterpret_cast<char*>(&m_opts.maxMemTableSize), sizeof(m_opts.maxMemTableSize));
+		stream.read(reinterpret_cast<char*>(&m_opts.maxWalBufferSize), sizeof(m_opts.maxWalBufferSize));
 		stream.read(reinterpret_cast<char*>(&m_opts.compressionType), sizeof(m_opts.compressionType));
+		stream.read(reinterpret_cast<char*>(&m_opts.hashType), sizeof(m_opts.hashType));
 		stream.peek();
-	}
-
-	void StorageEngine::resetMemTable() {
-		m_memTable = std::make_unique<MemTable>();
-		m_memTable->setWriteAheadLog(m_walFileName);
 	}
 
 	void StorageEngine::makeSnapshot() {
@@ -113,18 +118,31 @@ namespace omx {
 		const auto chunkFileName = m_chunkDir / ("segment_" + std::to_string(segment) + ".bin");
 		const auto indexFileName = m_indexDir / ("index_" + std::to_string(segment) + ".bin");
 
-		auto memTableStream = std::ofstream(chunkFileName, std::ios::binary);
-		auto indexStream    = std::ofstream(indexFileName, std::ios::binary);
+		const auto table = m_memTable->createSortedStringsTable();
 
-		auto tableIndex = m_memTable->createSortedStringsTableIndex(segment);
+		{
+			auto memTableStream = std::ofstream(chunkFileName, std::ios::binary);
+			m_memTable->dump(memTableStream);
+			m_memTable->clear();
+		}
 
-		m_memTable->dump(memTableStream);
+		{
+			auto bloomStream = std::ofstream(m_bloomFileName, std::ios::binary);
+			for (const auto& row: table.getRowList()) {
+				m_bloomFilter.add(row->getKey());
+			}
+			m_bloomFilter.dump(bloomStream);
+		}
 
-		tableIndex->dump(indexStream);
+		{
+			auto indexStream = std::ofstream(indexFileName, std::ios::binary);
 
-		m_index->update(std::move(tableIndex));
+			auto tableIndex = std::make_unique<SSTableIndex>(segment, table);
 
-		resetMemTable();
+			tableIndex->dump(indexStream);
+
+			m_index->update(std::move(tableIndex));
+		}
 	}
 
 	bool StorageEngine::findInMemory(Key key, std::string& value, UInt128& checksum) const {
@@ -133,6 +151,10 @@ namespace omx {
 	}
 
 	bool StorageEngine::findOnDisk(Key key, std::string& value, UInt128& checksum) const {
+		if (!m_bloomFilter.probablyContains(key)) {
+			return false;
+		}
+
 		SearchHint hint;
 		{
 			auto lock = std::shared_lock(m_mutex);

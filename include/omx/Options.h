@@ -5,7 +5,8 @@
 namespace omx {
 	enum class CompressionType : uint8_t {
 		NoCompression = 0,
-		Snappy
+		Snappy,
+		LZ4
 	};
 
 	enum class HashType : uint8_t {
@@ -17,7 +18,9 @@ namespace omx {
 
 		uint64_t maxMemTableSize = 1 * 1024 * 1024; // 1mb
 
-		CompressionType compressionType = CompressionType::Snappy;
+		uint32_t maxWalBufferSize = 1 * 1024; // 1kb
+
+		CompressionType compressionType = CompressionType::LZ4;
 
 		HashType hashType = HashType::CityHash128;
 

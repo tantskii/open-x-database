@@ -6,6 +6,7 @@
 #include "../src/SSTableRow.h"
 #include "../src/StorageEngine.h"
 #include "../src/SSTableIndex.h"
+#include "../src/BloomFilter.h"
 
 #include <gtest/gtest.h>
 
@@ -106,6 +107,29 @@ TEST(File, ReadWrite) {
 		ASSERT_EQ(str, "01xxx567abc");
 	}
 
+}
+
+TEST(BloomFilter, ReadWrite) {
+	constexpr uint64_t kFilterSize = 10'000'000;
+	constexpr uint8_t kNumHashes = 7;
+
+	auto bloomFilter = omx::BloomFilter<kFilterSize, kNumHashes>{};
+
+	for (uint64_t i = 0; i < 100'000; ++i) {
+		if (i % 100 != 0) {
+			bloomFilter.add(omx::Key(i));
+		}
+	}
+
+	for (uint64_t i = 0; i < 100'000; ++i) {
+		bool result = bloomFilter.probablyContains(omx::Key(i));
+
+		if (i % 100 != 0) {
+			ASSERT_TRUE(result);
+		} else {
+			ASSERT_FALSE(result);
+		}
+	}
 }
 
 TEST(Index, ReadWrite) {

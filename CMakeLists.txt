@@ -17,6 +17,8 @@ set(OMX_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 add_subdirectory(src)
 add_subdirectory(extern/snappy)
 include_directories(extern/snappy)
+add_subdirectory(extern/lz4/build/cmake)
+include_directories(extern/lz4/lib)
 
 if (OMX_WITH_UNITTESTS)
     add_subdirectory(extern/googletest)

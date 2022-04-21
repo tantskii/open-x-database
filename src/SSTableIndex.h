@@ -2,6 +2,8 @@
 
 #include <omx/Key.h>
 
+#include "SSTable.h"
+
 #include <unordered_map>
 #include <memory>
 #include <fstream>
@@ -18,6 +20,8 @@ namespace omx {
 	class SSTableIndex {
 	public:
 		explicit SSTableIndex(uint32_t fileId = 0);
+
+		SSTableIndex(uint32_t fileId, const SSTable& table);
 
 		void insert(Key key, FileSearchHint hint);
 

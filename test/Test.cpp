@@ -110,8 +110,8 @@ TEST(File, ReadWrite) {
 }
 
 TEST(BloomFilter, ReadWrite) {
-	constexpr uint64_t kFilterSize = 4294967296;
-	constexpr uint8_t kNumHashes = 30;
+	constexpr uint64_t kFilterSize = 10'000'000;
+	constexpr uint8_t kNumHashes = 7;
 
 	auto bloomFilter = omx::BloomFilter<kFilterSize, kNumHashes>{};
 

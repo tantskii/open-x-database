@@ -118,7 +118,16 @@ namespace omx {
 	SSTable MemTable::createSortedStringsTable() const {
 		auto table = SSTable();
 
-		for (const auto& [_, row]: m_map) {
+		size_t prevKeyId = std::string::npos;
+
+		for (const auto& [insertKey, row]: m_map) {
+			size_t keyId = insertKey.key.id;
+
+			if (prevKeyId == keyId) {
+				continue;
+			}
+			prevKeyId = keyId;
+
 			table.append(row);
 		}
 

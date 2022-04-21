@@ -75,6 +75,16 @@ namespace omx {
 		return m_fileId;
 	}
 
+	SSTableIndex::SSTableIndex(uint32_t fileId, const SSTable& table)
+		: m_fileId(fileId)
+	{
+		uint32_t offset = 0;
+		for (const auto& row: table.getRowList()) {
+			insert(row->getKey(), FileSearchHint(offset, row->getRowSize()));
+			offset += row->getRowSize();
+		}
+	}
+
 	FileSearchHint::FileSearchHint(const uint32_t offset_, const uint32_t size_)
 		: offset(offset_), size(size_)
 	{}

@@ -119,23 +119,30 @@ namespace omx {
 		const auto chunkFileName = m_chunkDir / ("segment_" + std::to_string(segment) + ".bin");
 		const auto indexFileName = m_indexDir / ("index_" + std::to_string(segment) + ".bin");
 
-		auto memTableStream = std::ofstream(chunkFileName, std::ios::binary);
-		auto indexStream    = std::ofstream(indexFileName, std::ios::binary);
-		auto bloomStream    = std::ofstream(m_bloomFileName, std::ios::binary);
-
 		const auto table = m_memTable->createSortedStringsTable();
-		for (const auto& row: table.getRowList()) {
-			m_bloomFilter.add(row->getKey());
+
+		{
+			auto memTableStream = std::ofstream(chunkFileName, std::ios::binary);
+			m_memTable->dump(memTableStream);
 		}
-		m_bloomFilter.dump(bloomStream);
 
-		auto tableIndex = m_memTable->createSortedStringsTableIndex(segment);
+		{
+			auto bloomStream = std::ofstream(m_bloomFileName, std::ios::binary);
+			for (const auto& row: table.getRowList()) {
+				m_bloomFilter.add(row->getKey());
+			}
+			m_bloomFilter.dump(bloomStream);
+		}
 
-		m_memTable->dump(memTableStream);
+		{
+			auto indexStream = std::ofstream(indexFileName, std::ios::binary);
 
-		tableIndex->dump(indexStream);
+			auto tableIndex = std::make_unique<SSTableIndex>(segment, table);
 
-		m_index->update(std::move(tableIndex));
+			tableIndex->dump(indexStream);
+
+			m_index->update(std::move(tableIndex));
+		}
 
 		resetMemTable();
 	}

@@ -4,12 +4,14 @@ set(OMX_HASHER_SOURCES
     IHasher.h
     NoHash.h
     CityHash128Adapter.h
+    MurmurHash3Adapter.h
 )
 
 set(OMX_HASHER_HEADERS
     HashingFactory.cpp
     NoHash.cpp
     CityHash128Adapter.cpp
+    MurmurHash3Adapter.cpp
 )
 
 add_subdirectory(SMHasher/src)

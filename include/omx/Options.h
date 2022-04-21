@@ -11,7 +11,8 @@ namespace omx {
 
 	enum class HashType : uint8_t {
 		NoHash = 0,
-		CityHash128
+		CityHash128,
+		MurmurHash3
 	};
 
 	struct Options {

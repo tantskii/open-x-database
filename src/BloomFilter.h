@@ -3,7 +3,7 @@
 #include <omx/Key.h>
 
 #include "Hasher/IHasher.h"
-#include "Hasher/CityHash/City.h"
+#include <MurmurHash3.h>
 
 #include <vector>
 
@@ -33,7 +33,9 @@ namespace omx {
 
 	template<uint64_t FilterSize, uint8_t NumHashes>
 	UInt128 BloomFilter<FilterSize, NumHashes>::hash(omx::Key key) const {
-		return CityHash128(reinterpret_cast<const char*>(&key), sizeof(key));
+		UInt128 hashValue = {};
+		MurmurHash3_x64_128(&key, sizeof(key), 46, &hashValue);
+		return hashValue;
 	}
 
 	template<uint64_t FilterSize, uint8_t NumHashes>

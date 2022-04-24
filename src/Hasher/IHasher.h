@@ -3,6 +3,7 @@
 #include <omx/Options.h>
 
 #include <memory>
+#include <string>
 
 namespace omx {
 

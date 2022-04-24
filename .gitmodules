@@ -10,3 +10,6 @@
 [submodule "extern/lz4"]
 	path = extern/lz4
 	url = git@github.com:lz4/lz4.git
+[submodule "src/Hasher/SMHasher"]
+	path = src/Hasher/SMHasher
+	url = git@github.com:aappleby/smhasher.git

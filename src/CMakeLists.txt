@@ -8,6 +8,7 @@ set(OMX_PUBLIC_HEADERS
     ${OMX_HEADERS_DIR}/Key.h
     ${OMX_HEADERS_DIR}/Options.h
     ${OMX_HEADERS_DIR}/Request.h
+    ${OMX_HEADERS_DIR}/Response.h
     ${OMX_HEADERS_DIR}/internal/FastPimpl.h
     ${OMX_HEADERS_DIR}/internal/Export.h
 )
@@ -23,6 +24,8 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/StorageEngine.cpp
     ${OMX_SOURCE_DIR}/SSTable.cpp
     ${OMX_SOURCE_DIR}/File.cpp
+    ${OMX_SOURCE_DIR}/Request.cpp
+    ${OMX_SOURCE_DIR}/Response.cpp
 )
 set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/MemTable.h

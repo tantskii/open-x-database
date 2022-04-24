@@ -3,6 +3,7 @@
 #include "Key.h"
 #include "Options.h"
 #include "Request.h"
+#include "Response.h"
 
 #include "internal/FastPimpl.h"
 #include "internal/Export.h"

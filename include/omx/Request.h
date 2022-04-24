@@ -14,24 +14,19 @@ namespace omx {
 	};
 
 	struct Request {
-		Request(RequestType requestType_, Key key_, std::string value_ = "")
-			: requestType(requestType_), key(key_), value(std::move(value_))
-		{}
+		explicit Request(
+			RequestType requestType_ = RequestType::Get,
+			Key key_ = {},
+			std::string value_ = "");
+
+		[[nodiscard]] std::string serialize() const;
+
+		void deserialize(const std::string& buffer);
+
+		bool operator==(const Request& other) const;
 
 		RequestType requestType;
 		Key key;
-		std::string value;
-	};
-
-	enum class ResponseStatus : uint8_t {
-		Ok = 0,
-		NotFound,
-		InvalidRequestType,
-		UnknownError
-	};
-
-	struct Response {
-		ResponseStatus responseStatus;
 		std::string value;
 	};
 

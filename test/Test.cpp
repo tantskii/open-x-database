@@ -132,6 +132,26 @@ TEST(BloomFilter, ReadWrite) {
 	}
 }
 
+TEST(Request, Serialization) {
+	auto request0 = omx::Request{omx::RequestType::Put, omx::Key(123), "test string"};
+	auto request1 = omx::Request{};
+
+	const auto buffer = request0.serialize();
+	request1.deserialize(buffer);
+
+	ASSERT_EQ(request0, request1);
+}
+
+TEST(Response, Serialization) {
+	auto response0 = omx::Response{omx::ResponseStatus::NotFound, "test string"};
+	auto response1 = omx::Response{};
+
+	const auto buffer = response0.serialize();
+	response1.deserialize(buffer);
+
+	ASSERT_EQ(response0, response1);
+}
+
 TEST(Index, ReadWrite) {
 	omx::Index index;
 	omx::SearchHint hint;

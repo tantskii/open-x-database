@@ -2,6 +2,7 @@
 
 #include <omx/Options.h>
 #include <omx/Request.h>
+#include <omx/Response.h>
 
 #include "MemTable.h"
 #include "BloomFilter.h"

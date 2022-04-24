@@ -184,4 +184,40 @@ namespace omx {
 
 		return true;
 	}
+
+	Response StorageEngine::handle(const Request& request) noexcept {
+		Response response;
+
+		try {
+			switch (request.requestType) {
+				case RequestType::Get: {
+					const bool isFound = get(request.key, response.value);
+
+					response.responseStatus = isFound ?
+						ResponseStatus::Ok :
+						ResponseStatus::NotFound;
+
+					break;
+				}
+				case RequestType::Put: {
+					put(request.key, request.value);
+					response.responseStatus = ResponseStatus::Ok;
+					break;
+				}
+				case RequestType::Delete: {
+					remove(request.key);
+					response.responseStatus = ResponseStatus::Ok;
+					break;
+				}
+				default: {
+					response.responseStatus = ResponseStatus::InvalidRequestType;
+					break;
+				}
+			}
+		} catch (std::exception&) {
+			response.responseStatus = ResponseStatus::UnknownError;
+		}
+
+		return response;
+	}
 }

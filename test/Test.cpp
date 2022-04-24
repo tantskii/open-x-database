@@ -541,6 +541,46 @@ TEST(StorageEngine, ReadWrite) {
 	ASSERT_FALSE(storage.get(omx::Key(10), output3));
 }
 
+TEST(StorageEngine, Handle) {
+
+	CLEAR_DIR(temp_dir);
+
+	omx::StorageEngine storage;
+	storage.open(temp_dir);
+
+	std::string input = "111111111111111111111111111111111111111111111111111111";
+
+	auto response = omx::Response{};
+
+	for (int i = 1; i <= 100000; ++i) {
+		response = storage.handle(omx::Request(omx::RequestType::Put, omx::Key(i), input));
+		ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+		ASSERT_EQ(response.value, "");
+
+		if (i == 10000) {
+			response = storage.handle(omx::Request(omx::RequestType::Delete, omx::Key(10)));
+			ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+			ASSERT_EQ(response.value, "");
+		}
+	}
+
+	response = storage.handle(omx::Request(omx::RequestType::Get, omx::Key(3)));
+	ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+	ASSERT_EQ(response.value, input);
+
+	response = storage.handle(omx::Request(omx::RequestType::Get, omx::Key(99999)));
+	ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+	ASSERT_EQ(response.value, input);
+
+	response = storage.handle(omx::Request(omx::RequestType::Get, omx::Key(100001)));
+	ASSERT_EQ(response.responseStatus, omx::ResponseStatus::NotFound);
+	ASSERT_EQ(response.value, "");
+
+	response = storage.handle(omx::Request(omx::RequestType::Get, omx::Key(10)));
+	ASSERT_EQ(response.responseStatus, omx::ResponseStatus::NotFound);
+	ASSERT_EQ(response.value, "");
+}
+
 TEST(StorageEngine, Restore) {
 	CLEAR_DIR(temp_dir);
 

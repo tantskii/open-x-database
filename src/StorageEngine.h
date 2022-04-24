@@ -1,6 +1,7 @@
 #pragma once
 
 #include <omx/Options.h>
+#include <omx/Request.h>
 
 #include "MemTable.h"
 #include "BloomFilter.h"
@@ -24,6 +25,8 @@ namespace omx {
 		void remove(Key key);
 
 		bool get(Key key, std::string& value) const;
+
+		Response handle(const Request& request) noexcept;
 
 	private:
 

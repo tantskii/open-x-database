@@ -20,6 +20,10 @@ namespace omx {
 		m_impl->open(path, options);
 	}
 
+	Response Database::handle(const Request& request) noexcept {
+		return m_impl->handle(request);
+	}
+
 	Database::Database() = default;
 
 	Database::~Database() = default;

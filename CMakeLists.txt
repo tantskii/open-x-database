@@ -4,6 +4,7 @@ project(omxdb)
 set(CMAKE_CXX_STANDARD 20)
 
 option(OMX_WITH_UNITTESTS "Build unittests exectable" ON)
+option(OMX_WITH_SERVER "Build omxdb-server executable" ON)
 
 set(OMX_VERSION_MAJOR 1)
 set(OMX_VERSION_MINOR 0)
@@ -23,6 +24,10 @@ include_directories(extern/lz4/lib)
 if (OMX_WITH_UNITTESTS)
     add_subdirectory(extern/googletest)
     add_subdirectory(test)
+endif()
+
+if (OMX_WITH_SERVER)
+    add_subdirectory(server)
 endif()
 
 

@@ -17,7 +17,8 @@ namespace omx {
 
 		database->open("/tmp/omxdb");
 
-		BOOST_LOG_TRIVIAL(info) << "Server Started. Listening to port " << m_port;
+		BOOST_LOG_TRIVIAL(info) << __PRETTY_FUNCTION__
+			<< " Server Started. Listening to port " << m_port;
 
 		return true; // TODO: check whether start() is successful.
 	}
@@ -26,5 +27,9 @@ namespace omx {
 		m_acceptor.stop();
 
 		return true; // TODO: check whether stop() is successful.
+	}
+
+	Server::~Server() {
+		stop();
 	}
 }

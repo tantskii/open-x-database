@@ -8,7 +8,7 @@ namespace omx {
 	class Server : public ServerBase {
 	public:
 		Server(uint16_t port, uint32_t numThreads);
-
+		~Server() override;
 	private:
 
 		bool init() override;

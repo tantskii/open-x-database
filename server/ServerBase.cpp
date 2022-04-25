@@ -8,11 +8,13 @@ namespace omx {
 
 	void ServerBase::start() {
 		if (init()) {
-			m_threads.resize(m_numThreads);
+			m_threads.resize(m_numThreads - 1);
 			for (auto& thread: m_threads) {
 				thread = std::thread([this]() { m_service.run(); });
 			}
 		}
+
+		m_service.run();
 	}
 
 	void ServerBase::stop() {

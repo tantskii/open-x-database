@@ -7,7 +7,7 @@ namespace omx {
 
 	class Server : public ServerBase {
 	public:
-		Server(uint16_t port, uint32_t numThreads);
+		Server(uint16_t port, uint32_t numThreads, std::string databaseDir, omx::Options = {});
 		~Server() override;
 	private:
 
@@ -17,6 +17,9 @@ namespace omx {
 
 		uint16_t m_port;
 		Acceptor m_acceptor;
+
+		const std::string m_databaseDir;
+		const omx::Options m_databaseOptions;
 	};
 
 }

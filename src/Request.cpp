@@ -6,13 +6,20 @@ namespace omx {
 
 	Request::Request(RequestType requestType_, Key key_, std::string value_)
 		: requestType(requestType_), key(key_), value(std::move(value_))
-	{}
+	{
+		contentLength = 0;
+		contentLength += sizeof(requestType);
+		contentLength += sizeof(key);
+		contentLength += sizeof(uint32_t); // sizeof(value.size());
+		contentLength += value.size();
+	}
 
 	std::string Request::serialize() const {
 		auto stream = std::ostringstream(std::ios::binary | std::ios::out);
 
 		const uint32_t valueSize = value.size();
 
+		stream.write(reinterpret_cast<const char*>(&contentLength), sizeof(contentLength));
 		stream.write(reinterpret_cast<const char*>(&requestType), sizeof(requestType));
 		stream.write(reinterpret_cast<const char*>(&key), sizeof(key));
 		stream.write(reinterpret_cast<const char*>(&valueSize), sizeof(valueSize));
@@ -26,6 +33,7 @@ namespace omx {
 
 		uint32_t valueSize = 0;
 
+		stream.read(reinterpret_cast<char*>(&contentLength), sizeof(contentLength));
 		stream.read(reinterpret_cast<char*>(&requestType), sizeof(requestType));
 		stream.read(reinterpret_cast<char*>(&key), sizeof(key));
 		stream.read(reinterpret_cast<char*>(&valueSize), sizeof(valueSize));

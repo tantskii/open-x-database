@@ -25,6 +25,8 @@ namespace omx {
 
 		bool operator==(const Request& other) const;
 
+		uint32_t contentLength;
+		// content
 		RequestType requestType;
 		Key key;
 		std::string value;

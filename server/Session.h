@@ -27,6 +27,13 @@ namespace omx {
 	private:
 
 		/**
+		 * @brief Callback for receiving request content length
+		 * @param errorCode
+		 * @param bytesTransferred
+		 */
+		void onContentLengthReceived(const BoostError& errorCode, std::size_t bytesTransferred);
+
+		/**
 		 * @brief Callback for the incoming request.
 		 * @param errorCode
 		 * @param bytesTransferred
@@ -55,6 +62,8 @@ namespace omx {
 		Socket m_socket;
 
 		DatabasePtr m_database;
+
+		uint32_t m_contentLength;
 
 		// TODO check if not necessary
 		omx::Response m_response;

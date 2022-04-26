@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 option(OMX_WITH_UNITTESTS "Build unittests exectable" ON)
 option(OMX_WITH_SERVER "Build omxdb-server executable" ON)
+option(OMX_WITH_CLIENT "Build omxdb-client executable" ON)
 
 set(OMX_VERSION_MAJOR 1)
 set(OMX_VERSION_MINOR 0)
@@ -30,4 +31,6 @@ if (OMX_WITH_SERVER)
     add_subdirectory(server)
 endif()
 
-
+if (OMX_WITH_CLIENT)
+    add_subdirectory(client)
+endif()

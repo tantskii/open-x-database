@@ -1,10 +1,10 @@
-#include "Server.h"
+#include "DatabaseServerImpl.h"
 
 #include <iostream>
 
 namespace omx {
 
-	Server::Server(uint16_t port, uint32_t numThreads, std::string databaseDir, omx::Options options)
+	DatabaseServerImpl::DatabaseServerImpl(uint16_t port, uint32_t numThreads, std::string databaseDir, omx::Options options)
 		: ServerBase(numThreads)
 		, m_port(port)
 		, m_acceptor(std::make_shared<Database>(), m_service, m_port)
@@ -12,7 +12,7 @@ namespace omx {
 		, m_databaseOptions(options)
 	{}
 
-	bool Server::init() {
+	bool DatabaseServerImpl::init() {
 		m_acceptor.start();
 
 		auto database = m_acceptor.getDatabasePtr();
@@ -28,13 +28,13 @@ namespace omx {
 		return true; // TODO: check whether start() is successful.
 	}
 
-	bool Server::close() {
+	bool DatabaseServerImpl::close() {
 		m_acceptor.stop();
 
 		return true; // TODO: check whether stop() is successful.
 	}
 
-	Server::~Server() {
+	DatabaseServerImpl::~DatabaseServerImpl() {
 		stop();
 	}
 }

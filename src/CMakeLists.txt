@@ -1,6 +1,6 @@
 
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.77.0 COMPONENTS system thread REQUIRED)
+find_package(Boost 1.77.0 COMPONENTS system thread thread REQUIRED)
 
 set(OMX_HEADERS_DIR ${OMX_INCLUDE_DIR}/omx)
 set(OMX_PUBLIC_HEADERS
@@ -9,6 +9,8 @@ set(OMX_PUBLIC_HEADERS
     ${OMX_HEADERS_DIR}/Options.h
     ${OMX_HEADERS_DIR}/Request.h
     ${OMX_HEADERS_DIR}/Response.h
+    ${OMX_HEADERS_DIR}/DatabaseServer.h
+    ${OMX_HEADERS_DIR}/DatabaseConnector.h
     ${OMX_HEADERS_DIR}/internal/FastPimpl.h
     ${OMX_HEADERS_DIR}/internal/Export.h
 )
@@ -26,6 +28,14 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/File.cpp
     ${OMX_SOURCE_DIR}/Request.cpp
     ${OMX_SOURCE_DIR}/Response.cpp
+    ${OMX_SOURCE_DIR}/Networking/Acceptor.cpp
+    ${OMX_SOURCE_DIR}/Networking/ClientSession.cpp
+    ${OMX_SOURCE_DIR}/Networking/DatabaseConnector.cpp
+    ${OMX_SOURCE_DIR}/Networking/DatabaseConnectorImpl.cpp
+    ${OMX_SOURCE_DIR}/Networking/DatabaseServer.cpp
+    ${OMX_SOURCE_DIR}/Networking/DatabaseServerImpl.cpp
+    ${OMX_SOURCE_DIR}/Networking/ServerBase.cpp
+    ${OMX_SOURCE_DIR}/Networking/ServerSession.cpp
 )
 set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/MemTable.h
@@ -38,6 +48,13 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/SSTable.h
     ${OMX_SOURCE_DIR}/File.h
     ${OMX_SOURCE_DIR}/BloomFilter.h
+    ${OMX_SOURCE_DIR}/Networking/Acceptor.h
+    ${OMX_SOURCE_DIR}/Networking/Aliases.h
+    ${OMX_SOURCE_DIR}/Networking/ClientSession.h
+    ${OMX_SOURCE_DIR}/Networking/DatabaseConnectorImpl.h
+    ${OMX_SOURCE_DIR}/Networking/DatabaseServerImpl.h
+    ${OMX_SOURCE_DIR}/Networking/ServerBase.h
+    ${OMX_SOURCE_DIR}/Networking/ServerSession.h
 )
 
 find_package(Threads REQUIRED)

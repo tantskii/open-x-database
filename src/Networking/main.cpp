@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "Server.h"
+#include "DatabaseServerImpl.h"
 
 int main() {
 	const uint16_t port = 3132;
@@ -13,7 +13,7 @@ int main() {
 	databaseOptions.hashType         = omx::HashType::CityHash128;
 	databaseOptions.compressionType  = omx::CompressionType::LZ4;
 
-	auto server = omx::Server(port, numThreads, databaseDirectory, databaseOptions);
+	auto server = omx::DatabaseServerImpl(port, numThreads, databaseDirectory, databaseOptions);
 
 	server.start();
 

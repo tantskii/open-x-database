@@ -1,20 +1,21 @@
 #pragma once
 
-#include "Aliases.h"
-#include "ClientSession.h"
+#include "Response.h"
+#include "Request.h"
+#include "internal/FastPimpl.h"
 
-#include <omx/Request.h>
-
-#include <boost/asio.hpp>
-
-#include <thread>
+#include <string>
+#include <future>
+#include <optional>
 
 namespace omx {
+
+	class DatabaseConnectorImpl;
 
 	/**
 	 * @brief Simple asynchronous tcp client for OMXD.
 	 */
-	class DatabaseTcpConnector {
+	class DatabaseConnector {
 	public:
 
 		/**
@@ -22,9 +23,9 @@ namespace omx {
 		 * @param address remote server IPv4 address.
 		 * @param port remote server IPv4 port.
 		 */
-		DatabaseTcpConnector(std::string address, uint16_t port);
+		DatabaseConnector(std::string address, uint16_t port);
 
-		~DatabaseTcpConnector();
+		~DatabaseConnector();
 
 		/**
 		 * @brief Send request to the server.
@@ -33,13 +34,9 @@ namespace omx {
 		std::future<omx::Response> execute(const omx::Request& request);
 
 	private:
-		const std::string m_address;
-		const uint16_t m_port;
-
-		boost::asio::io_service m_service;
-		boost::asio::io_service::work m_work;
-
-		std::thread m_thread;
+		static constexpr std::size_t kImplSize = 72;
+		static constexpr std::size_t kImplAlign = 8;
+		omx::FastPimpl<DatabaseConnectorImpl, kImplSize, kImplAlign> m_impl;
 	};
 
 }

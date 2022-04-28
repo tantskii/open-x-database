@@ -1,4 +1,4 @@
-#include "DatabaseTcpConnector.h"
+#include "DatabaseConnectorImpl.h"
 
 #include <iostream>
 #include <array>
@@ -7,18 +7,18 @@ using boost::asio::ip::tcp;
 
 namespace omx {
 
-	DatabaseTcpConnector::DatabaseTcpConnector(std::string address, uint16_t port)
+	DatabaseConnectorImpl::DatabaseConnectorImpl(std::string address, uint16_t port)
 		: m_address(std::move(address)), m_port(port), m_work(m_service)
 	{
 		m_thread = std::thread([this] { m_service.run(); });
 	}
 
-	DatabaseTcpConnector::~DatabaseTcpConnector() {
+	DatabaseConnectorImpl::~DatabaseConnectorImpl() {
 		m_service.stop();
 		m_thread.join();
 	}
 
-	std::future<omx::Response> DatabaseTcpConnector::execute(const Request& request) {
+	std::future<omx::Response> DatabaseConnectorImpl::execute(const Request& request) {
 		try {
 			auto socket   = std::make_shared<Socket>(m_service);
 			auto resolver = std::make_shared<Resolver>(m_service);

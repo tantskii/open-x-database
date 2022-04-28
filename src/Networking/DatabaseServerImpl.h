@@ -5,10 +5,10 @@
 
 namespace omx {
 
-	class Server : public ServerBase {
+	class DatabaseServerImpl : public ServerBase {
 	public:
-		Server(uint16_t port, uint32_t numThreads, std::string databaseDir, omx::Options = {});
-		~Server() override;
+		DatabaseServerImpl(uint16_t port, uint32_t numThreads, std::string databaseDir, omx::Options = {});
+		~DatabaseServerImpl() override;
 	private:
 
 		bool init() override;

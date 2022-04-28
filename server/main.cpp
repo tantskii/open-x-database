@@ -16,4 +16,6 @@ int main() {
 	auto server = omx::Server(port, numThreads, databaseDirectory, databaseOptions);
 
 	server.start();
+
+	server.wait();
 }

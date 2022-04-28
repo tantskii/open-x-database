@@ -21,6 +21,8 @@ namespace omx {
 
 		void stop();
 
+		void wait();
+
 	protected:
 
 		virtual bool init() = 0;
@@ -30,6 +32,7 @@ namespace omx {
 		uint32_t m_numThreads;
 		std::vector<std::thread> m_threads;
 		boost::asio::io_service m_service = {};
+		boost::asio::io_service::work m_work;
 	};
 
 }

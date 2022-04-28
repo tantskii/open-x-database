@@ -3,7 +3,7 @@
 namespace omx {
 
 	ServerBase::ServerBase(uint32_t numThreads)
-		: m_numThreads(numThreads)
+		: m_numThreads(numThreads), m_work(m_service)
 	{}
 
 	void ServerBase::start() {
@@ -13,8 +13,6 @@ namespace omx {
 				thread = std::thread([this]() { m_service.run(); });
 			}
 		}
-
-		m_service.run();
 	}
 
 	void ServerBase::stop() {
@@ -25,6 +23,10 @@ namespace omx {
 				thread.join();
 			}
 		}
+	}
+
+	void ServerBase::wait() {
+		m_service.run();
 	}
 
 }

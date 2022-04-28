@@ -2,7 +2,8 @@
 
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/log/trivial.hpp>
+
+#include <iostream>
 
 using namespace boost::asio::ip;
 
@@ -28,7 +29,7 @@ namespace omx {
 	void ServerSession::onRequestReceived(const BoostError& errorCode, size_t bytesTransferred) {
 
 		if (errorCode) {
-			BOOST_LOG_TRIVIAL(error) << __PRETTY_FUNCTION__
+			std::cerr
 				<< " Error code = " << errorCode.value()
 				<< ". Message: " << errorCode.message();
 
@@ -37,8 +38,7 @@ namespace omx {
 			return;
 		}
 
-		BOOST_LOG_TRIVIAL(info) << __PRETTY_FUNCTION__
-			<< " Request bytes transferred: " << bytesTransferred;
+		std::cout << " Request bytes transferred: " << bytesTransferred;
 
 		m_response = processRequest(m_requestBuffer);
 
@@ -54,13 +54,12 @@ namespace omx {
 	void ServerSession::onResponseSent(const BoostError& errorCode, size_t bytesTransferred) {
 
 		if (errorCode) {
-			BOOST_LOG_TRIVIAL(error) << __PRETTY_FUNCTION__
+			std::cerr
 				<< " Error code = " << errorCode.value()
 				<< ". Message: " << errorCode.message();
 		}
 
-		BOOST_LOG_TRIVIAL(info) << __PRETTY_FUNCTION__
-			<< " Response bytes transferred: " << bytesTransferred;
+		std::cout << " Response bytes transferred: " << bytesTransferred;
 
 		onFinish();
 	}
@@ -77,7 +76,7 @@ namespace omx {
 		auto request = omx::Request();
 		request.deserialize(serializedRequest);
 
-		BOOST_LOG_TRIVIAL(info) << __PRETTY_FUNCTION__
+		std::cout
 			<< " Received:"
 			<< " Request type = " << static_cast<int>(request.requestType)
 			<< " Key = " << request.key.id;
@@ -87,7 +86,7 @@ namespace omx {
 
 	void ServerSession::onContentLengthReceived(const BoostError& errorCode, size_t numBytes) {
 		if (errorCode) {
-			BOOST_LOG_TRIVIAL(error) << __PRETTY_FUNCTION__
+			std::cerr
 				<< " Error code = " << errorCode.value()
 				<< ". Message: " << errorCode.message();
 
@@ -96,8 +95,7 @@ namespace omx {
 			return;
 		}
 
-		BOOST_LOG_TRIVIAL(info) << __PRETTY_FUNCTION__
-			<< " Content length bytes transferred: " << numBytes;
+		std::cout << " Content length bytes transferred: " << numBytes;
 
 		assert(numBytes == sizeof(Request::contentLength));
 

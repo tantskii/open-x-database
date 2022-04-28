@@ -1,7 +1,7 @@
 find_package(Threads REQUIRED)
 
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.77.0 COMPONENTS system system thread log REQUIRED)
+find_package(Boost 1.77.0 COMPONENTS system system thread REQUIRED)
 
 set(OMXDB_CLIENT_HEADERS
     Aliases.h
@@ -22,7 +22,6 @@ target_link_libraries(omxdb-client
         ${CMAKE_PROJECT_NAME}_static
         pthread
         ${BOOST_LIBRARIES}
-        Boost::log
 )
 
 target_include_directories(omxdb-client

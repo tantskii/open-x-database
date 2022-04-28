@@ -1,7 +1,7 @@
 #include "Acceptor.h"
 #include "ServerSession.h"
 
-#include <boost/log/trivial.hpp>
+#include <iostream>
 #include <utility>
 
 using namespace boost::asio::ip;
@@ -43,7 +43,7 @@ namespace omx {
 			session->startHandling();
 		}
 		else {
-			BOOST_LOG_TRIVIAL(error) << __PRETTY_FUNCTION__
+			std::cerr
 				<< " Error code = " << errorCode.value()
 				<< ". Message: " << errorCode.message();
 		}

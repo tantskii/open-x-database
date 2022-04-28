@@ -1,6 +1,6 @@
 #include "Server.h"
 
-#include <boost/log/trivial.hpp>
+#include <iostream>
 
 namespace omx {
 
@@ -19,7 +19,7 @@ namespace omx {
 
 		database->open(m_databaseDir.c_str(), m_databaseOptions);
 
-		BOOST_LOG_TRIVIAL(info) << __PRETTY_FUNCTION__
+		std::cout
 			<< "\nOMXDB Server started with the following params: "
 			<< "\n\tPort               : " << m_port
 			<< "\n\tThreads            : " << m_numThreads

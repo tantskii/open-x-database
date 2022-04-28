@@ -31,13 +31,15 @@ namespace omx {
 
 	private:
 
+		using ContentLength = decltype(Response::contentLength);
+
 		SocketPtr m_socket;
 		QueryPtr m_query;
 		ResolverPtr m_resolver;
 		std::promise<omx::Response> m_promise;
 
 		boost::asio::streambuf m_buffer;
-		uint32_t m_contentLength;
+		ContentLength m_contentLength = 0;
 
 		omx::Request m_request;
 	};

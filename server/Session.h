@@ -59,11 +59,13 @@ namespace omx {
 		 */
 		omx::Response processRequest(boost::asio::streambuf& requestBuffer) const;
 
+		using ContentLength = decltype(Response::contentLength);
+
 		SocketPtr m_socket;
 
 		DatabasePtr m_database;
 
-		uint32_t m_contentLength;
+		ContentLength m_contentLength = 0;
 
 		// TODO check if not necessary
 		omx::Response m_response;

@@ -14,17 +14,18 @@ namespace omx {
 	{}
 
 	void Session::startHandling() {
-		constexpr uint32_t kContentLengthSize = sizeof(Request::contentLength);
+		constexpr uint32_t kContentLengthSize = sizeof(ContentLength);
 
-		auto callback = [this](const BoostError& errorCode, std::size_t bytesTransferred) {
+		auto matchCondition = boost::asio::transfer_exactly(kContentLengthSize);
+
+		auto readHandler = [this](const BoostError& errorCode, size_t bytesTransferred) {
 			onContentLengthReceived(errorCode, bytesTransferred);
 		};
 
-		boost::asio::async_read(
-			*m_socket, m_requestBuffer, boost::asio::transfer_exactly(kContentLengthSize), callback);
+		boost::asio::async_read(*m_socket, m_requestBuffer, matchCondition, readHandler);
 	}
 
-	void Session::onRequestReceived(const BoostError& errorCode, std::size_t bytesTransferred) {
+	void Session::onRequestReceived(const BoostError& errorCode, size_t bytesTransferred) {
 
 		if (errorCode) {
 			BOOST_LOG_TRIVIAL(error) << __PRETTY_FUNCTION__
@@ -43,15 +44,14 @@ namespace omx {
 
 		auto responseSerialized = m_response.serialize();
 
-		auto callback = [this](const BoostError& errorCode, std::size_t bytesTransferred) {
+		auto writeHandler = [this](const BoostError& errorCode, size_t bytesTransferred) {
 			onResponseSent(errorCode, bytesTransferred);
 		};
 
-		boost::asio::async_write(
-			*m_socket, boost::asio::buffer(responseSerialized), callback);
+		boost::asio::async_write(*m_socket, boost::asio::buffer(responseSerialized), writeHandler);
 	}
 
-	void Session::onResponseSent(const BoostError& errorCode, std::size_t bytesTransferred) {
+	void Session::onResponseSent(const BoostError& errorCode, size_t bytesTransferred) {
 
 		if (errorCode) {
 			BOOST_LOG_TRIVIAL(error) << __PRETTY_FUNCTION__
@@ -101,15 +101,15 @@ namespace omx {
 
 		assert(numBytes == sizeof(Request::contentLength));
 
-		using TSize = decltype(Request::contentLength);
-		m_contentLength = *reinterpret_cast<const TSize*>(m_requestBuffer.data().data());
+		m_contentLength = *reinterpret_cast<const ContentLength*>(m_requestBuffer.data().data());
 
-		auto callback = [this](const BoostError& errorCode, std::size_t bytesTransferred) {
+		auto matchCondition = boost::asio::transfer_exactly(m_contentLength);
+
+		auto readHandler = [this](const BoostError& errorCode, size_t bytesTransferred) {
 			onRequestReceived(errorCode, bytesTransferred);
 		};
 
-		boost::asio::async_read(
-			*m_socket, m_requestBuffer, boost::asio::transfer_exactly(m_contentLength), callback);
+		boost::asio::async_read(*m_socket, m_requestBuffer, matchCondition, readHandler);
 	}
 
 }

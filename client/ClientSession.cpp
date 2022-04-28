@@ -78,10 +78,9 @@ namespace omx {
 			return;
 		}
 
-		assert(numBytes == sizeof(Response::contentLength));
+		assert(numBytes == sizeof(ContentLength));
 
-		using TSize = decltype(Response::contentLength);
-		m_contentLength = *reinterpret_cast<const TSize*>(m_buffer.data().data());
+		m_contentLength = *reinterpret_cast<const ContentLength*>(m_buffer.data().data());
 
 		auto matchCondition = boost::asio::transfer_exactly(m_contentLength);
 

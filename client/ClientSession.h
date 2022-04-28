@@ -23,6 +23,8 @@ namespace omx {
 
 		void onSend(const BoostError& error, size_t numBytes);
 
+		void onContentLengthReceive(const BoostError& errorCode, std::size_t numBytes);
+
 		void onReceive(const BoostError& error, size_t numBytes);
 
 		void onFinish(std::optional<BoostError> error);
@@ -34,7 +36,9 @@ namespace omx {
 		ResolverPtr m_resolver;
 		std::promise<omx::Response> m_promise;
 
-		std::vector<char> m_buffer;
+		boost::asio::streambuf m_buffer;
+		uint32_t m_contentLength;
+
 		omx::Request m_request;
 	};
 

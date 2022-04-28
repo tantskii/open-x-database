@@ -25,6 +25,8 @@ namespace omx {
 
 		bool operator==(const Response& other) const;
 
+		uint32_t contentLength;
+		// content
 		ResponseStatus responseStatus;
 		std::string value;
 	};

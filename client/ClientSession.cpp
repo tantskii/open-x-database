@@ -14,6 +14,8 @@ namespace omx {
 	std::future<omx::Response> ClientSession::run(const Request& request) {
 		auto future = m_promise.get_future();
 
+		m_request = request;
+
 		try {
 			auto resolveHandler = [this](const BoostError& error, const Resolver::iterator& it) {
 				onResolve(error, it);
@@ -50,7 +52,7 @@ namespace omx {
 			onSend(error, numBytes);
 		};
 
-		m_socket->async_send(boost::asio::buffer(m_request.serialize()), sendHandler);
+		m_socket->async_send(boost::asio::buffer( m_request.serialize()), sendHandler);
 	}
 
 	void ClientSession::onSend(const BoostError& error, size_t numBytes) {
@@ -59,11 +61,35 @@ namespace omx {
 			return;
 		}
 
+		auto readUntilHandler = [this](const BoostError& error, size_t numBytes) {
+			onContentLengthReceive(error, numBytes);
+		};
+
+		constexpr uint32_t kContentLengthSize = sizeof(Response::contentLength);
+
+		auto matchCondition = boost::asio::transfer_exactly(kContentLengthSize);
+
+		boost::asio::async_read(*m_socket, m_buffer, matchCondition, readUntilHandler);
+	}
+
+	void ClientSession::onContentLengthReceive(const BoostError& error, size_t numBytes) {
+		if (error) {
+			onFinish(error);
+			return;
+		}
+
+		assert(numBytes == sizeof(Response::contentLength));
+
+		using TSize = decltype(Response::contentLength);
+		m_contentLength = *reinterpret_cast<const TSize*>(m_buffer.data().data());
+
+		auto matchCondition = boost::asio::transfer_exactly(m_contentLength);
+
 		auto receiveHandler = [this](const BoostError& error, size_t numBytes) {
 			onReceive(error, numBytes);
 		};
 
-		m_socket->async_receive(boost::asio::buffer(m_buffer), receiveHandler);
+		boost::asio::async_read(*m_socket, m_buffer, matchCondition, receiveHandler);
 	}
 
 	void ClientSession::onReceive(const BoostError& error, size_t numBytes) {
@@ -72,7 +98,11 @@ namespace omx {
 			return;
 		}
 
-		const auto responseSerialized = std::string(m_buffer.data(), m_buffer.size());
+		assert(numBytes == m_contentLength);
+
+		const auto responseSerialized = std::string(
+			std::istreambuf_iterator<char>(&m_buffer),
+			std::istreambuf_iterator<char>());
 
 		auto response = omx::Response();
 		response.deserialize(responseSerialized);

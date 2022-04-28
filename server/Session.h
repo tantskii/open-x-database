@@ -16,7 +16,7 @@ namespace omx {
 	class Session {
 	public:
 
-		explicit Session(DatabasePtr database, Socket socket);
+		explicit Session(DatabasePtr database, SocketPtr socket);
 
 		/**
 		 * @brief This method starts handling the client by initiating the asynchronous
@@ -59,7 +59,7 @@ namespace omx {
 		 */
 		omx::Response processRequest(boost::asio::streambuf& requestBuffer) const;
 
-		Socket m_socket;
+		SocketPtr m_socket;
 
 		DatabasePtr m_database;
 

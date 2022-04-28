@@ -6,11 +6,13 @@ find_package(Boost 1.77.0 COMPONENTS system system thread log REQUIRED)
 set(OMXDB_CLIENT_HEADERS
     Aliases.h
     DatabaseConnection.h
+    ClientSession.h
 )
 
 set(OMXDB_CLIENT_SOURCES
     main.cpp
     DatabaseConnection.cpp
+    ClientSession.cpp
 )
 
 add_executable(omxdb-client ${OMXDB_CLIENT_HEADERS} ${OMXDB_CLIENT_SOURCES})

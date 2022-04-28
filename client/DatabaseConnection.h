@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Aliases.h"
+#include "ClientSession.h"
 
 #include <omx/Request.h>
 
@@ -29,14 +30,14 @@ namespace omx {
 		 * @brief Send request to the server.
 		 * @param request OMXDB request
 		 */
-		omx::Response execute(const omx::Request& request);
+		std::future<omx::Response> execute(const omx::Request& request);
 
 	private:
 		const std::string m_address;
 		const uint16_t m_port;
 
 		boost::asio::io_service m_service;
-		Socket m_socket;
+		boost::asio::io_service::work m_work;
 
 		std::thread m_thread;
 	};

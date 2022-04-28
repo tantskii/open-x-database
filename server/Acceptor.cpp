@@ -34,7 +34,7 @@ namespace omx {
 		m_acceptor.async_accept(*socket, acceptCallback);
 	}
 
-	void Acceptor::onAccept(const BoostError& errorCode, Socket socket) {
+	void Acceptor::onAccept(const BoostError& errorCode, SocketPtr socket) {
 
 		if (!errorCode) {
 			auto* session = new Session(m_database, std::move(socket));

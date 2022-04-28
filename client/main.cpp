@@ -27,7 +27,7 @@ int main() {
 		auto request = omx::Request(omx::RequestType::Put, omx::Key(123), "test string");
 		std::cout << request << std::endl;
 
-		omx::Response response = databaseConnection.execute(request);
+		omx::Response response = databaseConnection.execute(request).get();
 
 		std::cout << response << std::endl;
 	}
@@ -36,7 +36,7 @@ int main() {
 		auto request = omx::Request(omx::RequestType::Get, omx::Key(123), "");
 		std::cout << request << std::endl;
 
-		omx::Response response = databaseConnection.execute(request);
+		omx::Response response = databaseConnection.execute(request).get();
 
 		std::cout << response << std::endl;
 	}

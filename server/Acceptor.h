@@ -48,7 +48,7 @@ namespace omx {
 		 * @param errorCode error code
 		 * @param socket instance of 'socket' class
 		 */
-		void onAccept(const BoostError& errorCode, Socket socket);
+		void onAccept(const BoostError& errorCode, SocketPtr socket);
 
 		boost::asio::io_service& m_service;
 		boost::asio::ip::tcp::acceptor m_acceptor;

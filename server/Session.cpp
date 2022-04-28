@@ -8,7 +8,7 @@ using namespace boost::asio::ip;
 
 namespace omx {
 
-	Session::Session(DatabasePtr database, Socket socket)
+	Session::Session(DatabasePtr database, SocketPtr socket)
 		: m_database(std::move(database))
 		, m_socket(std::move(socket))
 	{}

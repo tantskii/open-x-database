@@ -1,5 +1,5 @@
 #include "Acceptor.h"
-#include "Session.h"
+#include "ServerSession.h"
 
 #include <boost/log/trivial.hpp>
 #include <utility>
@@ -37,7 +37,7 @@ namespace omx {
 	void Acceptor::onAccept(const BoostError& errorCode, SocketPtr socket) {
 
 		if (!errorCode) {
-			auto* session = new Session(m_database, std::move(socket));
+			auto* session = new ServerSession(m_database, std::move(socket));
 
 			// This session object will be deleted in session::onFinished()
 			session->startHandling();

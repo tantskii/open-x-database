@@ -14,7 +14,7 @@ namespace omx {
 	/**
 	 * @brief Simple asynchronous tcp client for OMXD.
 	 */
-	class DatabaseConnection {
+	class DatabaseTcpConnector {
 	public:
 
 		/**
@@ -22,9 +22,9 @@ namespace omx {
 		 * @param address remote server IPv4 address.
 		 * @param port remote server IPv4 port.
 		 */
-		DatabaseConnection(std::string address, uint16_t port);
+		DatabaseTcpConnector(std::string address, uint16_t port);
 
-		~DatabaseConnection();
+		~DatabaseTcpConnector();
 
 		/**
 		 * @brief Send request to the server.

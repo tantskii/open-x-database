@@ -13,10 +13,10 @@ namespace omx {
 	 * @brief Session class is intended to handle a single connected client by reading the
 	 * request, processing it, and then sending back the response message.
 	 */
-	class Session {
+	class ServerSession {
 	public:
 
-		explicit Session(DatabasePtr database, SocketPtr socket);
+		explicit ServerSession(DatabasePtr database, SocketPtr socket);
 
 		/**
 		 * @brief This method starts handling the client by initiating the asynchronous

@@ -6,14 +6,14 @@ find_package(Boost 1.77.0 COMPONENTS system system thread log REQUIRED)
 set(OMXDB_SERVER_HEADERS
     Aliases.h
     Acceptor.h
-    Session.h
+    ServerSession.h
     ServerBase.h
     Server.h)
 
 set(OMXDB_SERVER_SOURCES
     main.cpp
     Acceptor.cpp
-    Session.cpp
+    ServerSession.cpp
     ServerBase.cpp
     Server.cpp)
 

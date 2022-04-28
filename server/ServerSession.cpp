@@ -1,4 +1,4 @@
-#include "Session.h"
+#include "ServerSession.h"
 
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
@@ -8,12 +8,12 @@ using namespace boost::asio::ip;
 
 namespace omx {
 
-	Session::Session(DatabasePtr database, SocketPtr socket)
+	ServerSession::ServerSession(DatabasePtr database, SocketPtr socket)
 		: m_database(std::move(database))
 		, m_socket(std::move(socket))
 	{}
 
-	void Session::startHandling() {
+	void ServerSession::startHandling() {
 		constexpr uint32_t kContentLengthSize = sizeof(ContentLength);
 
 		auto matchCondition = boost::asio::transfer_exactly(kContentLengthSize);
@@ -25,7 +25,7 @@ namespace omx {
 		boost::asio::async_read(*m_socket, m_requestBuffer, matchCondition, readHandler);
 	}
 
-	void Session::onRequestReceived(const BoostError& errorCode, size_t bytesTransferred) {
+	void ServerSession::onRequestReceived(const BoostError& errorCode, size_t bytesTransferred) {
 
 		if (errorCode) {
 			BOOST_LOG_TRIVIAL(error) << __PRETTY_FUNCTION__
@@ -51,7 +51,7 @@ namespace omx {
 		boost::asio::async_write(*m_socket, boost::asio::buffer(responseSerialized), writeHandler);
 	}
 
-	void Session::onResponseSent(const BoostError& errorCode, size_t bytesTransferred) {
+	void ServerSession::onResponseSent(const BoostError& errorCode, size_t bytesTransferred) {
 
 		if (errorCode) {
 			BOOST_LOG_TRIVIAL(error) << __PRETTY_FUNCTION__
@@ -65,11 +65,11 @@ namespace omx {
 		onFinish();
 	}
 
-	void Session::onFinish() {
+	void ServerSession::onFinish() {
 		delete this;
 	}
 
-	omx::Response Session::processRequest(boost::asio::streambuf& requestBuffer) const {
+	omx::Response ServerSession::processRequest(boost::asio::streambuf& requestBuffer) const {
 		auto serializedRequest = std::string(
 			std::istreambuf_iterator<char>(&requestBuffer),
 			std::istreambuf_iterator<char>());
@@ -85,7 +85,7 @@ namespace omx {
 		return m_database->handle(request);
 	}
 
-	void Session::onContentLengthReceived(const BoostError& errorCode, size_t numBytes) {
+	void ServerSession::onContentLengthReceived(const BoostError& errorCode, size_t numBytes) {
 		if (errorCode) {
 			BOOST_LOG_TRIVIAL(error) << __PRETTY_FUNCTION__
 				<< " Error code = " << errorCode.value()

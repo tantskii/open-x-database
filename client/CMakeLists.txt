@@ -5,13 +5,13 @@ find_package(Boost 1.77.0 COMPONENTS system system thread log REQUIRED)
 
 set(OMXDB_CLIENT_HEADERS
     Aliases.h
-    DatabaseConnection.h
+    DatabaseTcpConnector.h
     ClientSession.h
 )
 
 set(OMXDB_CLIENT_SOURCES
     main.cpp
-    DatabaseConnection.cpp
+    DatabaseTcpConnector.cpp
     ClientSession.cpp
 )
 

@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "DatabaseConnection.h"
+#include "DatabaseTcpConnector.h"
 
 std::ostream& operator<<(std::ostream& os, const omx::Request& request) {
 	os << "Request:"
@@ -21,13 +21,13 @@ int main() {
 	const uint16_t port = 3132;
 	const std::string address = "127.0.0.1";
 
-	omx::DatabaseConnection databaseConnection(address, port);
+	omx::DatabaseTcpConnector connector(address, port);
 
 	{
 		auto request = omx::Request(omx::RequestType::Put, omx::Key(123), "test string");
 		std::cout << request << std::endl;
 
-		omx::Response response = databaseConnection.execute(request).get();
+		omx::Response response = connector.execute(request).get();
 
 		std::cout << response << std::endl;
 	}
@@ -36,7 +36,7 @@ int main() {
 		auto request = omx::Request(omx::RequestType::Get, omx::Key(123), "");
 		std::cout << request << std::endl;
 
-		omx::Response response = databaseConnection.execute(request).get();
+		omx::Response response = connector.execute(request).get();
 
 		std::cout << response << std::endl;
 	}

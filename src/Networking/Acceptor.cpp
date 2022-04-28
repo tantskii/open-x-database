@@ -45,7 +45,8 @@ namespace omx {
 		else {
 			std::cerr
 				<< " Error code = " << errorCode.value()
-				<< ". Message: " << errorCode.message();
+				<< ". Message: " << errorCode.message()
+				<< std::endl;
 		}
 
 		// Init next async accept operation if acceptor has not been stopped yet.

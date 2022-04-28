@@ -38,7 +38,7 @@ namespace omx {
 			return;
 		}
 
-		std::cout << " Request bytes transferred: " << bytesTransferred;
+		std::cout << " Request bytes transferred: " << bytesTransferred << std::endl;
 
 		m_response = processRequest(m_requestBuffer);
 
@@ -56,10 +56,11 @@ namespace omx {
 		if (errorCode) {
 			std::cerr
 				<< " Error code = " << errorCode.value()
-				<< ". Message: " << errorCode.message();
+				<< ". Message: " << errorCode.message()
+				<< std::endl;
 		}
 
-		std::cout << " Response bytes transferred: " << bytesTransferred;
+		std::cout << " Response bytes transferred: " << bytesTransferred << std::endl;
 
 		onFinish();
 	}
@@ -79,7 +80,8 @@ namespace omx {
 		std::cout
 			<< " Received:"
 			<< " Request type = " << static_cast<int>(request.requestType)
-			<< " Key = " << request.key.id;
+			<< " Key = " << request.key.id
+			<< std::endl;
 
 		return m_database->handle(request);
 	}
@@ -88,14 +90,15 @@ namespace omx {
 		if (errorCode) {
 			std::cerr
 				<< " Error code = " << errorCode.value()
-				<< ". Message: " << errorCode.message();
+				<< ". Message: " << errorCode.message()
+				<< std::endl;
 
 			onFinish();
 
 			return;
 		}
 
-		std::cout << " Content length bytes transferred: " << numBytes;
+		std::cout << " Content length bytes transferred: " << numBytes << std::endl;
 
 		assert(numBytes == sizeof(Request::contentLength));
 

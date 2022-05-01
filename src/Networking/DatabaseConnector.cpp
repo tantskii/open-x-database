@@ -8,8 +8,8 @@ namespace omx {
 		: m_impl(std::move(address), port)
 	{}
 
-	std::future<omx::Response> DatabaseConnector::execute(const Request& request) {
-		return m_impl->execute(request);
+	std::future<omx::Response> DatabaseConnector::execute(Request request) {
+		return m_impl->execute(std::move(request));
 	}
 
 	DatabaseConnector::~DatabaseConnector() = default;

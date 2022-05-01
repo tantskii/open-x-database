@@ -31,7 +31,7 @@ namespace omx {
 		 * @brief Send request to the server.
 		 * @param request OMXDB request
 		 */
-		std::future<omx::Response> execute(const omx::Request& request);
+		std::future<omx::Response> execute(omx::Request request);
 
 	private:
 		static constexpr std::size_t kImplSize = 72;

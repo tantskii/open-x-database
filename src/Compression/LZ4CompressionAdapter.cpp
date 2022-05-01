@@ -2,6 +2,8 @@
 
 #include <lz4.h>
 
+#include <stdexcept>
+
 namespace omx {
 
 	void LZ4CompressionAdapter::compress(const std::string& input, std::string& output) {

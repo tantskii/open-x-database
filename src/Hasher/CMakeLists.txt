@@ -16,6 +16,24 @@ set(OMX_HASHER_HEADERS
 
 add_subdirectory(SMHasher/src)
 
-add_library(omxdb_hashing STATIC ${OMX_HASHER_SOURCES} ${OMX_HASHER_HEADERS})
-target_link_libraries(omxdb_hashing PUBLIC SMHasherSupport)
-target_include_directories(omxdb_hashing PUBLIC ${OMX_INCLUDE_DIR} SMHasher/src)
+add_library(omxdb_hashing
+    STATIC
+        ${OMX_HASHER_SOURCES}
+        ${OMX_HASHER_HEADERS}
+)
+
+target_link_libraries(omxdb_hashing
+    PUBLIC
+        SMHasherSupport
+)
+
+target_include_directories(omxdb_hashing
+    PUBLIC
+        ${OMX_INCLUDE_DIR}
+        SMHasher/src
+)
+
+set_target_properties(omxdb_compression
+    PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+)

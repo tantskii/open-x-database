@@ -88,7 +88,7 @@ macro(build_omxdb_lib lib_name lib_type)
     )
 
     set_target_properties(${lib_name}
-        PROPERTIES
+        PROPERTIES    POSITION_INDEPENDENT_CODE ON
         DEFINE_SYMBOL "OMXDB_DLL_EXPORTS"
         OUTPUT_NAME   ${CMAKE_PROJECT_NAME}
         VERSION       ${OMX_VERSION_MAJOR}.${OMX_VERSION_MINOR}

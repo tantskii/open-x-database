@@ -1,21 +1,40 @@
+#include <omx/DatabaseServer.h>
+
+#include <boost/program_options.hpp>
+
 #include <iostream>
 
-#include "DatabaseServerImpl.h"
+int main(int argc, const char **argv) {
+	namespace po = boost::program_options;
 
-int main() {
-	const uint16_t port = 3132;
-	const uint16_t numThreads = 4;
-	const std::string databaseDirectory = "/tmp/omxdb";
+	try {
+		po::options_description description;
+		description.add_options()
+			("help", "produce help message")
+			("port", po::value<uint16_t>()->default_value(3333), "port number")
+			("threads", po::value<uint16_t>()->default_value(1), "number of threads")
+			("db-directory", po::value<std::string>()->default_value("/tmp/omxdb"),
+			 	"OMXDB root directory. NOTE: directory should exist.");
 
-	omx::Options databaseOptions = {};
-	databaseOptions.maxMemTableSize  = 1 * 1024 * 1024;
-	databaseOptions.maxWalBufferSize = 1 * 1024;
-	databaseOptions.hashType         = omx::HashType::CityHash128;
-	databaseOptions.compressionType  = omx::CompressionType::LZ4;
+		po::variables_map args;
+		po::store(po::parse_command_line(argc, argv, description), args);
+		po::notify(args);
 
-	auto server = omx::DatabaseServerImpl(port, numThreads, databaseDirectory, databaseOptions);
+		if (args.count("help")) {
+			std::cout << description << "\n";
+			return 1;
+		}
 
-	server.start();
+		const auto port              = args["port"].as<uint16_t>();
+		const auto numThreads        = args["threads"].as<uint16_t>();
+		const auto databaseDirectory = args["db-directory"].as<std::string>();
 
-	server.wait();
+		auto server = omx::DatabaseServer(port, numThreads, databaseDirectory);
+
+		server.start();
+		server.wait();
+	} catch (std::exception& ex) {
+		std::cerr << ex.what() << std::endl;
+		return 1;
+	}
 }

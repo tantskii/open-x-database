@@ -1,6 +1,6 @@
 
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.77.0 COMPONENTS system thread thread REQUIRED)
+find_package(Boost 1.77.0 COMPONENTS system thread thread program_options REQUIRED)
 
 set(OMX_HEADERS_DIR ${OMX_INCLUDE_DIR}/omx)
 set(OMX_PUBLIC_HEADERS
@@ -96,13 +96,29 @@ macro(build_omxdb_lib lib_name lib_type)
     )
 endmacro()
 
-build_omxdb_lib(${CMAKE_PROJECT_NAME} SHARED)
-if (OMX_WITH_UNITTESTS)
-    build_omxdb_lib(${CMAKE_PROJECT_NAME}_static STATIC)
-endif()
+macro(build_omxdb_exe exe_name exe_files)
+    add_executable(${exe_name} ${exe_files})
 
-install(
-    DIRECTORY ${OMX_HEADERS_DIR}
+    target_include_directories(${exe_name}
+        PUBLIC
+            ${OMX_INCLUDE_DIR}
+            ${Boost_INCLUDE_DIR}
+    )
+
+    target_link_libraries(${exe_name}
+        PUBLIC
+            ${CMAKE_PROJECT_NAME}_static
+            ${BOOST_LIBRARIES}
+            pthread
+            Boost::program_options
+    )
+endmacro()
+
+build_omxdb_lib(${CMAKE_PROJECT_NAME} SHARED)
+build_omxdb_lib(${CMAKE_PROJECT_NAME}_static STATIC)
+build_omxdb_exe(omxdb-server ${OMX_SOURCE_DIR}/Networking/main.cpp)
+
+install(DIRECTORY ${OMX_HEADERS_DIR}
     DESTINATION ${OMX_INSTALL_PREFIX}/include
     COMPONENT headers)
 
@@ -111,7 +127,9 @@ install(TARGETS ${CMAKE_PROJECT_NAME}
     ARCHIVE DESTINATION ${OMX_INSTALL_PREFIX}/lib/${OMX_OUTPUT_PREFIX}
     LIBRARY DESTINATION ${OMX_INSTALL_PREFIX}/lib/${OMX_OUTPUT_PREFIX})
 
-install(
-    FILES ${CMAKE_SOURCE_DIR}/cmake/Findomxdb.cmake
+install(TARGETS omxdb-server
+    RUNTIME DESTINATION ${OMX_INSTALL_PREFIX}/bin/${OMX_OUTPUT_PREFIX})
+
+install(FILES ${CMAKE_SOURCE_DIR}/cmake/Findomxdb.cmake
     DESTINATION ${OMX_INSTALL_PREFIX}/cmake
     COMPONENT cmake)

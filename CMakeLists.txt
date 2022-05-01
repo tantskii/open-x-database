@@ -24,5 +24,3 @@ if (OMX_WITH_UNITTESTS)
     add_subdirectory(extern/googletest)
     add_subdirectory(test)
 endif()
-
-

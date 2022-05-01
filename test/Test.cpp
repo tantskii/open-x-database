@@ -1,4 +1,6 @@
 #include <omx/Database.h>
+#include <omx/DatabaseServer.h>
+#include <omx/DatabaseConnector.h>
 
 #include "../src/MemTable.h"
 #include "../src/File.h"
@@ -130,6 +132,26 @@ TEST(BloomFilter, ReadWrite) {
 			ASSERT_FALSE(result);
 		}
 	}
+}
+
+TEST(Request, Serialization) {
+	auto request0 = omx::Request{omx::RequestType::Put, omx::Key(123), "test string"};
+	auto request1 = omx::Request{};
+
+	const auto buffer = request0.serialize();
+	request1.deserialize(buffer);
+
+	ASSERT_EQ(request0, request1);
+}
+
+TEST(Response, Serialization) {
+	auto response0 = omx::Response{omx::ResponseStatus::NotFound, "test string"};
+	auto response1 = omx::Response{};
+
+	const auto buffer = response0.serialize();
+	response1.deserialize(buffer);
+
+	ASSERT_EQ(response0, response1);
 }
 
 TEST(Index, ReadWrite) {
@@ -541,6 +563,46 @@ TEST(StorageEngine, ReadWrite) {
 	ASSERT_FALSE(storage.get(omx::Key(10), output3));
 }
 
+TEST(StorageEngine, Handle) {
+
+	CLEAR_DIR(temp_dir);
+
+	omx::StorageEngine storage;
+	storage.open(temp_dir);
+
+	std::string input = "111111111111111111111111111111111111111111111111111111";
+
+	auto response = omx::Response{};
+
+	for (int i = 1; i <= 100000; ++i) {
+		response = storage.handle(omx::Request(omx::RequestType::Put, omx::Key(i), input));
+		ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+		ASSERT_EQ(response.value, "");
+
+		if (i == 10000) {
+			response = storage.handle(omx::Request(omx::RequestType::Delete, omx::Key(10)));
+			ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+			ASSERT_EQ(response.value, "");
+		}
+	}
+
+	response = storage.handle(omx::Request(omx::RequestType::Get, omx::Key(3)));
+	ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+	ASSERT_EQ(response.value, input);
+
+	response = storage.handle(omx::Request(omx::RequestType::Get, omx::Key(99999)));
+	ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+	ASSERT_EQ(response.value, input);
+
+	response = storage.handle(omx::Request(omx::RequestType::Get, omx::Key(100001)));
+	ASSERT_EQ(response.responseStatus, omx::ResponseStatus::NotFound);
+	ASSERT_EQ(response.value, "");
+
+	response = storage.handle(omx::Request(omx::RequestType::Get, omx::Key(10)));
+	ASSERT_EQ(response.responseStatus, omx::ResponseStatus::NotFound);
+	ASSERT_EQ(response.value, "");
+}
+
 TEST(StorageEngine, Restore) {
 	CLEAR_DIR(temp_dir);
 
@@ -638,4 +700,67 @@ TEST(Database, ReadWriteThreaded) {
 
 	ASSERT_FALSE(database.get(omx::Key(100'001), out2));
 	ASSERT_FALSE(database.get(omx::Key(10), out2));
+}
+
+TEST(Networking, Handle) {
+	CLEAR_DIR(temp_dir);
+
+	const uint16_t port = 3232;
+	const std::string address = "127.0.0.1";
+	const std::string databaseDir = temp_dir;
+	const uint16_t numThreads = 4;
+
+	auto server    = std::make_shared<omx::DatabaseServer>(port, numThreads, databaseDir);
+	auto connector = std::make_shared<omx::DatabaseConnector>(address, port);
+
+	server->start();
+
+	using FutureResponse = std::future<omx::Response>;
+
+	std::vector<FutureResponse> insertFutures(4);
+	insertFutures[0] = connector->execute(omx::Request(omx::RequestType::Put, omx::Key(0), "0000"));
+	insertFutures[1] = connector->execute(omx::Request(omx::RequestType::Put, omx::Key(1), "1111"));
+	insertFutures[2] = connector->execute(omx::Request(omx::RequestType::Put, omx::Key(2), "2222"));
+	insertFutures[3] = connector->execute(omx::Request(omx::RequestType::Put, omx::Key(3), "3333"));
+
+	for (FutureResponse& f: insertFutures) {
+		auto response = f.get();
+		ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+	}
+
+	std::vector<FutureResponse> receiveFutures(4);
+	receiveFutures[0] = connector->execute(omx::Request(omx::RequestType::Get, omx::Key(0)));
+	receiveFutures[1] = connector->execute(omx::Request(omx::RequestType::Get, omx::Key(1)));
+	receiveFutures[2] = connector->execute(omx::Request(omx::RequestType::Get, omx::Key(2)));
+	receiveFutures[3] = connector->execute(omx::Request(omx::RequestType::Get, omx::Key(3)));
+
+	std::vector<omx::Response> responses(4);
+
+	for (int i = 0; i < responses.size(); ++i) {
+		responses[i] = receiveFutures[i].get();
+		ASSERT_EQ(responses[i].responseStatus, omx::ResponseStatus::Ok);
+	}
+	ASSERT_EQ(responses[0].value, "0000");
+	ASSERT_EQ(responses[1].value, "1111");
+	ASSERT_EQ(responses[2].value, "2222");
+	ASSERT_EQ(responses[3].value, "3333");
+
+	auto notFoundFuture = connector->execute(omx::Request(omx::RequestType::Get, omx::Key(4)));
+	auto removeFuture   = connector->execute(omx::Request(omx::RequestType::Delete, omx::Key(2)));
+
+	{
+		auto response = notFoundFuture.get();
+		ASSERT_EQ(response.responseStatus, omx::ResponseStatus::NotFound);
+	}
+
+	{
+		auto response = removeFuture.get();
+		ASSERT_EQ(response.responseStatus, omx::ResponseStatus::Ok);
+	}
+
+	auto removeFuture2 = connector->execute(omx::Request(omx::RequestType::Get, omx::Key(2)));
+	{
+		auto response = removeFuture2.get();
+		ASSERT_EQ(response.responseStatus, omx::ResponseStatus::NotFound);
+	}
 }

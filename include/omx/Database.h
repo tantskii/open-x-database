@@ -2,6 +2,8 @@
 
 #include "Key.h"
 #include "Options.h"
+#include "Request.h"
+#include "Response.h"
 
 #include "internal/FastPimpl.h"
 #include "internal/Export.h"
@@ -50,6 +52,13 @@ namespace omx {
 		 * @throws std::runtime_error on error
 		 */
 		bool get(Key key, std::string& value);
+
+		/**
+		 * @brief get, put and remove functions in a single method
+		 * @param request [in] object that describes request
+		 * @return database response
+		 */
+		Response handle(const Request& request) noexcept;
 
 	private:
 		static constexpr std::size_t kImplSize = 384;

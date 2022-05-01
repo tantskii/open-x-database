@@ -116,7 +116,8 @@ endmacro()
 
 build_omxdb_lib(${CMAKE_PROJECT_NAME} SHARED)
 build_omxdb_lib(${CMAKE_PROJECT_NAME}_static STATIC)
-build_omxdb_exe(omxdb-server ${OMX_SOURCE_DIR}/Networking/main.cpp)
+build_omxdb_exe(omxdb-server ${OMX_SOURCE_DIR}/Networking/MainServer.cpp)
+build_omxdb_exe(omxdb-client ${OMX_SOURCE_DIR}/Networking/MainClient.cpp)
 
 install(DIRECTORY ${OMX_HEADERS_DIR}
     DESTINATION ${OMX_INSTALL_PREFIX}/include
@@ -127,7 +128,7 @@ install(TARGETS ${CMAKE_PROJECT_NAME}
     ARCHIVE DESTINATION ${OMX_INSTALL_PREFIX}/lib/${OMX_OUTPUT_PREFIX}
     LIBRARY DESTINATION ${OMX_INSTALL_PREFIX}/lib/${OMX_OUTPUT_PREFIX})
 
-install(TARGETS omxdb-server
+install(TARGETS omxdb-server omxdb-client
     RUNTIME DESTINATION ${OMX_INSTALL_PREFIX}/bin/${OMX_OUTPUT_PREFIX})
 
 install(FILES ${CMAKE_SOURCE_DIR}/cmake/Findomxdb.cmake

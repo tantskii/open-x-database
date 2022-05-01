@@ -1,24 +1,37 @@
 #include "ClientSession.h"
 
+#include <iostream>
+
+#define HANDLE_BOOST_ERROR(__error)        \
+{                                          \
+	if (__error) {                         \
+		self->onError(__error);            \
+		return;                            \
+	}                                      \
+}
+
+
 namespace omx {
 
 	ClientSession::ClientSession(
 		SocketPtr socket,
 		ResolverPtr resolver,
-		QueryPtr query)
+		QueryPtr query,
+		Request request)
 		: m_socket(std::move(socket))
 		, m_resolver(std::move(resolver))
 		, m_query(std::move(query))
+		, m_request(std::move(request))
 	{}
 
-	std::future<omx::Response> ClientSession::run(const Request& request) {
+	std::future<omx::Response> ClientSession::run() {
 		auto future = m_promise.get_future();
 
-		m_request = request;
-
 		try {
-			auto resolveHandler = [this](const BoostError& error, const Resolver::iterator& it) {
-				onResolve(error, it);
+			auto self = shared_from_this();
+
+			auto resolveHandler = [self](const BoostError& error, const Resolver::iterator& it) {
+				self->onResolve(self, error, it);
 			};
 
 			m_resolver->async_resolve(*m_query, resolveHandler);
@@ -29,54 +42,40 @@ namespace omx {
 		return future;
 	}
 
-	void ClientSession::onResolve(const BoostError& error, const Resolver::iterator& it) {
-		if (error) {
-			onFinish(error);
-			return;
-		}
+	void ClientSession::onResolve(Ptr self, const BoostError& error, const Resolver::iterator& it) {
+		HANDLE_BOOST_ERROR(error);
 
-		auto connectHandler = [this](const BoostError& error) {
-			onConnect(error);
+		auto connectHandler = [self](const BoostError& error) {
+			self->onConnect(self, error);
 		};
 
 		m_socket->async_connect(it->endpoint(), connectHandler);
 	}
 
-	void ClientSession::onConnect(const BoostError& error) {
-		if (error) {
-			onFinish(error);
-			return;
-		}
+	void ClientSession::onConnect(Ptr self, const BoostError& error) {
+		HANDLE_BOOST_ERROR(error);
 
-		auto sendHandler = [this](const BoostError& error, size_t numBytes) {
-			onSend(error, numBytes);
+		auto sendHandler = [self](const BoostError& error, size_t numBytes) {
+			self->onSend(self, error, numBytes);
 		};
 
-		m_socket->async_send(boost::asio::buffer( m_request.serialize()), sendHandler);
+		m_socket->async_send(boost::asio::buffer(m_request.serialize()), sendHandler);
 	}
 
-	void ClientSession::onSend(const BoostError& error, size_t numBytes) {
-		if (error) {
-			onFinish(error);
-			return;
-		}
+	void ClientSession::onSend(Ptr self, const BoostError& error, const size_t numBytes) {
+		HANDLE_BOOST_ERROR(error);
 
-		auto readUntilHandler = [this](const BoostError& error, size_t numBytes) {
-			onContentLengthReceive(error, numBytes);
+		auto readHandler = [self](const BoostError& error, const size_t numBytes) {
+			self->onContentLengthReceive(self, error, numBytes);
 		};
 
-		constexpr uint32_t kContentLengthSize = sizeof(Response::contentLength);
+		auto matchCondition = boost::asio::transfer_exactly(sizeof(ContentLength));
 
-		auto matchCondition = boost::asio::transfer_exactly(kContentLengthSize);
-
-		boost::asio::async_read(*m_socket, m_buffer, matchCondition, readUntilHandler);
+		boost::asio::async_read(*m_socket, m_buffer, matchCondition, readHandler);
 	}
 
-	void ClientSession::onContentLengthReceive(const BoostError& error, size_t numBytes) {
-		if (error) {
-			onFinish(error);
-			return;
-		}
+	void ClientSession::onContentLengthReceive(Ptr self, const BoostError& error, size_t numBytes) {
+		HANDLE_BOOST_ERROR(error);
 
 		assert(numBytes == sizeof(ContentLength));
 
@@ -84,18 +83,15 @@ namespace omx {
 
 		auto matchCondition = boost::asio::transfer_exactly(m_contentLength);
 
-		auto receiveHandler = [this](const BoostError& error, size_t numBytes) {
-			onReceive(error, numBytes);
+		auto receiveHandler = [self](const BoostError& error, size_t numBytes) {
+			self->onReceive(self, error, numBytes);
 		};
 
 		boost::asio::async_read(*m_socket, m_buffer, matchCondition, receiveHandler);
 	}
 
-	void ClientSession::onReceive(const BoostError& error, size_t numBytes) {
-		if (error) {
-			onFinish(error);
-			return;
-		}
+	void ClientSession::onReceive(Ptr self, const BoostError& error, size_t numBytes) {
+		HANDLE_BOOST_ERROR(error);
 
 		assert(numBytes == m_contentLength);
 
@@ -107,18 +103,18 @@ namespace omx {
 		response.deserialize(responseSerialized);
 
 		m_promise.set_value(std::move(response));
-
-		onFinish(std::nullopt);
 	}
 
-	void ClientSession::onFinish(std::optional<BoostError> errorOpt) {
-		if (errorOpt.has_value()) {
-			auto exceptionPtr = std::make_exception_ptr(std::runtime_error(errorOpt->message()));
+	void ClientSession::onError(const BoostError& error) {
+		assert(error);
 
-			m_promise.set_exception(std::move(exceptionPtr));
-		}
+		std::cerr
+			<< " Error code = " << error.value()
+			<< ". Message: " << error.message();
 
-		delete this;
+		auto exceptionPtr = std::make_exception_ptr(std::runtime_error(error.message()));
+
+		m_promise.set_exception(std::move(exceptionPtr));
 	}
 
 }

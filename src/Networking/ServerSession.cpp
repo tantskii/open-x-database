@@ -21,9 +21,7 @@ namespace omx {
 	{}
 
 	void ServerSession::run() {
-		constexpr uint32_t kContentLengthSize = sizeof(ContentLength);
-
-		auto matchCondition = boost::asio::transfer_exactly(kContentLengthSize);
+		auto matchCondition = boost::asio::transfer_exactly(sizeof(ContentLength));
 
 		auto self = shared_from_this();
 

@@ -11,28 +11,30 @@
 
 namespace omx {
 
-	class ClientSession {
+class ClientSession : public std::enable_shared_from_this<ClientSession> {
 	public:
-		ClientSession(SocketPtr socket, ResolverPtr resolver, QueryPtr query);
+		ClientSession(SocketPtr socket, ResolverPtr resolver, QueryPtr query, Request request);
 
-		std::future<omx::Response> run(const omx::Request& request);
-
-		void onResolve(const BoostError& error, const Resolver::iterator& it);
-
-		void onConnect(const BoostError& error);
-
-		void onSend(const BoostError& error, size_t numBytes);
-
-		void onContentLengthReceive(const BoostError& errorCode, std::size_t numBytes);
-
-		void onReceive(const BoostError& error, size_t numBytes);
-
-		void onFinish(std::optional<BoostError> error);
+		std::future<omx::Response> run();
 
 	private:
+		using Ptr = std::shared_ptr<ClientSession>;
+
+		void onResolve(Ptr self, const BoostError& error, const Resolver::iterator& it);
+
+		void onConnect(Ptr self, const BoostError& error);
+
+		void onSend(Ptr self, const BoostError& error, size_t numBytes);
+
+		void onContentLengthReceive(Ptr self, const BoostError& errorCode, std::size_t numBytes);
+
+		void onReceive(Ptr self, const BoostError& error, size_t numBytes);
+
+		void onError(const BoostError& error);
 
 		using ContentLength = decltype(Response::contentLength);
 
+	private:
 		SocketPtr m_socket;
 		QueryPtr m_query;
 		ResolverPtr m_resolver;
@@ -41,7 +43,7 @@ namespace omx {
 		boost::asio::streambuf m_buffer;
 		ContentLength m_contentLength = 0;
 
-		omx::Request m_request;
+		const omx::Request m_request;
 	};
 
 }

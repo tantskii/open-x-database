@@ -23,9 +23,9 @@ namespace omx {
 			auto socket   = std::make_shared<Socket>(m_service);
 			auto resolver = std::make_shared<Resolver>(m_service);
 			auto query    = std::make_shared<Query>(tcp::v4(), m_address, std::to_string(m_port));
-			auto* session = new ClientSession(socket, resolver, query);
+			auto session  = std::make_shared<ClientSession>(socket, resolver, query, request);
 
-			return session->run(request);
+			return session->run();
 		} catch (const std::exception& e) {
 			auto promise = std::promise<omx::Response>();
 

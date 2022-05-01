@@ -7,6 +7,12 @@
 
 using namespace boost::asio::ip;
 
+static void onError(const omx::BoostError& error) {
+	std::cerr
+		<< " Error code = " << error.value()
+		<< ". Message: " << error.message();
+}
+
 namespace omx {
 
 	ServerSession::ServerSession(DatabasePtr database, SocketPtr socket)
@@ -14,59 +20,46 @@ namespace omx {
 		, m_socket(std::move(socket))
 	{}
 
-	void ServerSession::startHandling() {
+	void ServerSession::run() {
 		constexpr uint32_t kContentLengthSize = sizeof(ContentLength);
 
 		auto matchCondition = boost::asio::transfer_exactly(kContentLengthSize);
 
-		auto readHandler = [this](const BoostError& errorCode, size_t bytesTransferred) {
-			onContentLengthReceived(errorCode, bytesTransferred);
+		auto self = shared_from_this();
+
+		auto readHandler = [self](const BoostError& error, const size_t numBytes) {
+			self->onContentLengthReceived(self, error, numBytes);
 		};
 
 		boost::asio::async_read(*m_socket, m_requestBuffer, matchCondition, readHandler);
 	}
 
-	void ServerSession::onRequestReceived(const BoostError& errorCode, size_t bytesTransferred) {
-
-		if (errorCode) {
-			std::cerr
-				<< " Error code = " << errorCode.value()
-				<< ". Message: " << errorCode.message();
-
-			onFinish();
-
+	void ServerSession::onRequestReceived(Ptr self, const BoostError& error, const size_t numBytes) {
+		if (error) {
+			onError(error);
 			return;
 		}
 
-		std::cout << " Request bytes transferred: " << bytesTransferred << std::endl;
+		std::cout << " Request bytes transferred: " << numBytes << std::endl;
 
 		m_response = processRequest(m_requestBuffer);
 
 		auto responseSerialized = m_response.serialize();
 
-		auto writeHandler = [this](const BoostError& errorCode, size_t bytesTransferred) {
-			onResponseSent(errorCode, bytesTransferred);
+		auto writeHandler = [self](const BoostError& error, const size_t numBytes) {
+			self->onResponseSent(self, error, numBytes);
 		};
 
 		boost::asio::async_write(*m_socket, boost::asio::buffer(responseSerialized), writeHandler);
 	}
 
-	void ServerSession::onResponseSent(const BoostError& errorCode, size_t bytesTransferred) {
-
-		if (errorCode) {
-			std::cerr
-				<< " Error code = " << errorCode.value()
-				<< ". Message: " << errorCode.message()
-				<< std::endl;
+	void ServerSession::onResponseSent(Ptr self, const BoostError& error, const size_t numBytes) {
+		if (error) {
+			onError(error);
+			return;
 		}
 
-		std::cout << " Response bytes transferred: " << bytesTransferred << std::endl;
-
-		onFinish();
-	}
-
-	void ServerSession::onFinish() {
-		delete this;
+		std::cout << " Response bytes transferred: " << numBytes << std::endl;
 	}
 
 	omx::Response ServerSession::processRequest(boost::asio::streambuf& requestBuffer) const {
@@ -86,28 +79,22 @@ namespace omx {
 		return m_database->handle(request);
 	}
 
-	void ServerSession::onContentLengthReceived(const BoostError& errorCode, size_t numBytes) {
-		if (errorCode) {
-			std::cerr
-				<< " Error code = " << errorCode.value()
-				<< ". Message: " << errorCode.message()
-				<< std::endl;
-
-			onFinish();
-
+	void ServerSession::onContentLengthReceived(Ptr self, const BoostError& error, const size_t numBytes) {
+		if (error) {
+			onError(error);
 			return;
 		}
 
 		std::cout << " Content length bytes transferred: " << numBytes << std::endl;
 
-		assert(numBytes == sizeof(Request::contentLength));
+		assert(numBytes == sizeof(ContentLength));
 
 		m_contentLength = *reinterpret_cast<const ContentLength*>(m_requestBuffer.data().data());
 
 		auto matchCondition = boost::asio::transfer_exactly(m_contentLength);
 
-		auto readHandler = [this](const BoostError& errorCode, size_t bytesTransferred) {
-			onRequestReceived(errorCode, bytesTransferred);
+		auto readHandler = [self](const BoostError& error, size_t numBytes) {
+			self->onRequestReceived(self, error, numBytes);
 		};
 
 		boost::asio::async_read(*m_socket, m_requestBuffer, matchCondition, readHandler);

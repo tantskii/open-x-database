@@ -13,7 +13,7 @@ namespace omx {
 	 * @brief Session class is intended to handle a single connected client by reading the
 	 * request, processing it, and then sending back the response message.
 	 */
-	class ServerSession {
+	class ServerSession : public std::enable_shared_from_this<ServerSession> {
 	public:
 
 		explicit ServerSession(DatabasePtr database, SocketPtr socket);
@@ -22,35 +22,32 @@ namespace omx {
 		 * @brief This method starts handling the client by initiating the asynchronous
 		 *  reading operation to read the request message from the client.
 		 */
-		void startHandling();
+		void run();
 
 	private:
+
+		using Ptr = std::shared_ptr<ServerSession>;
 
 		/**
 		 * @brief Callback for receiving request content length
 		 * @param errorCode
 		 * @param bytesTransferred
 		 */
-		void onContentLengthReceived(const BoostError& errorCode, std::size_t bytesTransferred);
+		void onContentLengthReceived(Ptr self, const BoostError& errorCode, size_t numBytes);
 
 		/**
 		 * @brief Callback for the incoming request.
 		 * @param errorCode
 		 * @param bytesTransferred
 		 */
-		void onRequestReceived(const BoostError& errorCode, std::size_t bytesTransferred);
+		void onRequestReceived(Ptr self, const BoostError& errorCode, size_t numBytes);
 
 		/**
 		 * @brief Callback for the response event.
 		 * @param errorCode
 		 * @param bytesTransferred
 		 */
-		void onResponseSent(const BoostError& errorCode, std::size_t bytesTransferred);
-
-		/**
-		 * @brief Callback for cleaning up the allocated session object
-		 */
-		void onFinish();
+		void onResponseSent(Ptr self, const BoostError& errorCode, size_t numBytes);
 
 		/**
 		 * @brief Parse and process the incoming request from client.

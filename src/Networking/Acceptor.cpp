@@ -27,20 +27,18 @@ namespace omx {
 	void Acceptor::initAccept() {
 		auto socket = std::make_shared<tcp::socket>(m_service);
 
-		auto acceptCallback = [this, socket](const BoostError& error) {
+		auto acceptHandler = [this, socket](const BoostError& error) {
 			onAccept(error, socket);
 		};
 
-		m_acceptor.async_accept(*socket, acceptCallback);
+		m_acceptor.async_accept(*socket, acceptHandler);
 	}
 
 	void Acceptor::onAccept(const BoostError& errorCode, SocketPtr socket) {
-
 		if (!errorCode) {
-			auto* session = new ServerSession(m_database, std::move(socket));
+			auto session = std::make_shared<ServerSession>(m_database, std::move(socket));
 
-			// This session object will be deleted in session::onFinished()
-			session->startHandling();
+			session->run();
 		}
 		else {
 			std::cerr

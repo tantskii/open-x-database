@@ -13,7 +13,17 @@ namespace omx {
 		: m_database(std::move(database))
 		, m_socket(std::move(socket))
 		, m_tag()
-	{}
+	{
+		std::cout << m_tag
+			<< " Start new server session."
+			<< std::endl;
+	}
+
+	ServerSession::~ServerSession() {
+		std::cout << m_tag
+			<< " Finish server session."
+			<< std::endl;
+	}
 
 	void ServerSession::run() {
 		auto matchCondition = boost::asio::transfer_exactly(sizeof(ContentLength));
@@ -33,10 +43,6 @@ namespace omx {
 			return;
 		}
 
-		std::cout
-			<< m_tag
-			<< " Request bytes transferred: " << numBytes << std::endl;
-
 		auto response = processRequest(m_requestBuffer);
 
 		auto responseSerialized = response.serialize();
@@ -53,10 +59,6 @@ namespace omx {
 			onError(error);
 			return;
 		}
-
-		std::cout
-			<< m_tag
-			<< " Response bytes transferred: " << numBytes << std::endl;
 	}
 
 	omx::Response ServerSession::processRequest(boost::asio::streambuf& requestBuffer) const {
@@ -82,10 +84,6 @@ namespace omx {
 			onError(error);
 			return;
 		}
-
-		std::cout
-			<< m_tag
-			<<  " Content length bytes transferred: " << numBytes << std::endl;
 
 		assert(numBytes == sizeof(ContentLength));
 

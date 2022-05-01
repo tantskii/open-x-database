@@ -19,6 +19,8 @@ namespace omx {
 
 		explicit ServerSession(DatabasePtr database, SocketPtr socket);
 
+		~ServerSession();
+
 		/**
 		 * @brief This method starts handling the client by initiating the asynchronous
 		 *  reading operation to read the request message from the client.

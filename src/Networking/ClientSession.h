@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Aliases.h"
+#include "UUID.h"
 
 #include <omx/Database.h>
 
@@ -14,6 +15,8 @@ namespace omx {
 class ClientSession : public std::enable_shared_from_this<ClientSession> {
 	public:
 		ClientSession(SocketPtr socket, ResolverPtr resolver, QueryPtr query, Request request);
+
+		~ClientSession();
 
 		std::future<omx::Response> run();
 
@@ -44,6 +47,8 @@ class ClientSession : public std::enable_shared_from_this<ClientSession> {
 		ContentLength m_contentLength = 0;
 
 		const omx::Request m_request;
+
+		UUID m_tag;
 	};
 
 }

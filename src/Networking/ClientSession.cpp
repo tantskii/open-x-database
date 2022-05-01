@@ -10,7 +10,6 @@
 	}                                      \
 }
 
-
 namespace omx {
 
 	ClientSession::ClientSession(
@@ -22,7 +21,20 @@ namespace omx {
 		, m_resolver(std::move(resolver))
 		, m_query(std::move(query))
 		, m_request(std::move(request))
-	{}
+		, m_tag()
+	{
+		std::cout << m_tag
+			<< " Start new client session:"
+			<< " Request type = " << static_cast<int>(m_request.requestType)
+			<< " Key id = " << m_request.key.id
+			<< std::endl;
+	}
+
+	ClientSession::~ClientSession() {
+		std::cout << m_tag
+			<< " Finish client session"
+			<< std::endl;
+	}
 
 	std::future<omx::Response> ClientSession::run() {
 		auto future = m_promise.get_future();
@@ -108,7 +120,7 @@ namespace omx {
 	void ClientSession::onError(const BoostError& error) {
 		assert(error);
 
-		std::cerr
+		std::cerr << m_tag
 			<< " Error code = " << error.value()
 			<< ". Message: " << error.message();
 

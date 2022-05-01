@@ -5,6 +5,14 @@
 
 #include <iostream>
 
+#define HANDLE_BOOST_ERROR(__error)        \
+{                                          \
+	if (__error) {                         \
+		self->onError(__error);            \
+		return;                            \
+	}                                      \
+}
+
 using namespace boost::asio::ip;
 
 namespace omx {
@@ -38,10 +46,7 @@ namespace omx {
 	}
 
 	void ServerSession::onRequestReceived(Ptr self, const BoostError& error, const size_t numBytes) {
-		if (error) {
-			onError(error);
-			return;
-		}
+		HANDLE_BOOST_ERROR(error);
 
 		auto response = processRequest(m_requestBuffer);
 
@@ -55,10 +60,7 @@ namespace omx {
 	}
 
 	void ServerSession::onResponseSent(Ptr self, const BoostError& error, const size_t numBytes) {
-		if (error) {
-			onError(error);
-			return;
-		}
+		HANDLE_BOOST_ERROR(error);
 	}
 
 	omx::Response ServerSession::processRequest(boost::asio::streambuf& requestBuffer) const {
@@ -80,10 +82,7 @@ namespace omx {
 	}
 
 	void ServerSession::onContentLengthReceived(Ptr self, const BoostError& error, const size_t numBytes) {
-		if (error) {
-			onError(error);
-			return;
-		}
+		HANDLE_BOOST_ERROR(error);
 
 		assert(numBytes == sizeof(ContentLength));
 

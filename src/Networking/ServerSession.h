@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Aliases.h"
+#include "UUID.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/streambuf.hpp>
@@ -49,6 +50,8 @@ namespace omx {
 		 */
 		void onResponseSent(Ptr self, const BoostError& errorCode, size_t numBytes);
 
+		void onError(const BoostError& errorCode);
+
 		/**
 		 * @brief Parse and process the incoming request from client.
 		 * @param requestBuffer buffer with serialized request
@@ -56,6 +59,7 @@ namespace omx {
 		 */
 		omx::Response processRequest(boost::asio::streambuf& requestBuffer) const;
 
+	private:
 		using ContentLength = decltype(Response::contentLength);
 
 		SocketPtr m_socket;
@@ -64,9 +68,9 @@ namespace omx {
 
 		ContentLength m_contentLength = 0;
 
-		// TODO check if not necessary
-		omx::Response m_response;
 		boost::asio::streambuf m_requestBuffer;
+
+		UUID m_tag;
 	};
 
 }

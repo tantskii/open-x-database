@@ -8,7 +8,7 @@ namespace omx {
 
 	void ServerBase::start() {
 		if (init()) {
-			m_threads.resize(m_numThreads - 1);
+			m_threads.resize(m_numThreads);
 			for (auto& thread: m_threads) {
 				thread = std::thread([this]() { m_service.run(); });
 			}

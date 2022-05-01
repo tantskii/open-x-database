@@ -23,7 +23,8 @@ namespace omx {
 			<< "\nOMXDB Server started with the following params: "
 			<< "\n\tPort               : " << m_port
 			<< "\n\tThreads            : " << m_numThreads
-			<< "\n\tDatabase directory : " << m_databaseDir;
+			<< "\n\tDatabase directory : " << m_databaseDir
+			<< std::endl;
 
 		return true; // TODO: check whether start() is successful.
 	}

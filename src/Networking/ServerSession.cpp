@@ -7,17 +7,12 @@
 
 using namespace boost::asio::ip;
 
-static void onError(const omx::BoostError& error) {
-	std::cerr
-		<< " Error code = " << error.value()
-		<< ". Message: " << error.message();
-}
-
 namespace omx {
 
 	ServerSession::ServerSession(DatabasePtr database, SocketPtr socket)
 		: m_database(std::move(database))
 		, m_socket(std::move(socket))
+		, m_tag()
 	{}
 
 	void ServerSession::run() {
@@ -38,11 +33,13 @@ namespace omx {
 			return;
 		}
 
-		std::cout << " Request bytes transferred: " << numBytes << std::endl;
+		std::cout
+			<< m_tag
+			<< " Request bytes transferred: " << numBytes << std::endl;
 
-		m_response = processRequest(m_requestBuffer);
+		auto response = processRequest(m_requestBuffer);
 
-		auto responseSerialized = m_response.serialize();
+		auto responseSerialized = response.serialize();
 
 		auto writeHandler = [self](const BoostError& error, const size_t numBytes) {
 			self->onResponseSent(self, error, numBytes);
@@ -57,7 +54,9 @@ namespace omx {
 			return;
 		}
 
-		std::cout << " Response bytes transferred: " << numBytes << std::endl;
+		std::cout
+			<< m_tag
+			<< " Response bytes transferred: " << numBytes << std::endl;
 	}
 
 	omx::Response ServerSession::processRequest(boost::asio::streambuf& requestBuffer) const {
@@ -69,6 +68,7 @@ namespace omx {
 		request.deserialize(serializedRequest);
 
 		std::cout
+			<< m_tag
 			<< " Received:"
 			<< " Request type = " << static_cast<int>(request.requestType)
 			<< " Key = " << request.key.id
@@ -83,7 +83,9 @@ namespace omx {
 			return;
 		}
 
-		std::cout << " Content length bytes transferred: " << numBytes << std::endl;
+		std::cout
+			<< m_tag
+			<<  " Content length bytes transferred: " << numBytes << std::endl;
 
 		assert(numBytes == sizeof(ContentLength));
 
@@ -96,6 +98,13 @@ namespace omx {
 		};
 
 		boost::asio::async_read(*m_socket, m_requestBuffer, matchCondition, readHandler);
+	}
+
+	void ServerSession::onError(const BoostError& error) {
+		std::cerr
+			<< m_tag
+			<< " Error code = " << error.value()
+			<< ". Message: " << error.message();
 	}
 
 }

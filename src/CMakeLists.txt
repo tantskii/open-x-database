@@ -36,6 +36,7 @@ set(OMX_SOURCES
     ${OMX_SOURCE_DIR}/Networking/DatabaseServerImpl.cpp
     ${OMX_SOURCE_DIR}/Networking/ServerBase.cpp
     ${OMX_SOURCE_DIR}/Networking/ServerSession.cpp
+    ${OMX_SOURCE_DIR}/Networking/UUID.cpp
 )
 set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/MemTable.h
@@ -55,6 +56,7 @@ set(OMX_HEADERS
     ${OMX_SOURCE_DIR}/Networking/DatabaseServerImpl.h
     ${OMX_SOURCE_DIR}/Networking/ServerBase.h
     ${OMX_SOURCE_DIR}/Networking/ServerSession.h
+    ${OMX_SOURCE_DIR}/Networking/UUID.h
 )
 
 find_package(Threads REQUIRED)

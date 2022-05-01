@@ -2,7 +2,7 @@ find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
 macro(add_test test_name sources)
-    set(binary unittest_${test_name})
+    set(binary ${test_name})
 
     add_executable(${binary}
         GoogleTestDriver.cpp
@@ -23,6 +23,6 @@ macro(add_test test_name sources)
     )
 endmacro()
 
-add_test(omxdb Test.cpp)
+add_test(omxdb-test Test.cpp)
 
-install(TARGETS unittest_omxdb RUNTIME DESTINATION ${OMX_INSTALL_PREFIX}/bin/${OMX_OUTPUT_PREFIX})
+install(TARGETS omxdb-test RUNTIME DESTINATION ${OMX_INSTALL_PREFIX}/bin/${OMX_OUTPUT_PREFIX})
